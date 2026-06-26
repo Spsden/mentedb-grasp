@@ -1,0 +1,22 @@
+name: mentedb_memory_demo
+description: Native Flutter example for comparing OpenAI-compatible responses with and without memory context.
+publish_to: none
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mentedb_flutter:
+    path: ..
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

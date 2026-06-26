@@ -15,3 +15,7 @@ Recommended native shape:
    crate is built with the `enrichment` feature.
 
 This package does not target Flutter web.
+
+The runnable example app under `example/` compares an OpenAI-compatible chat
+completion with and without memory context, and includes a text memory bank that
+can be edited at runtime.
