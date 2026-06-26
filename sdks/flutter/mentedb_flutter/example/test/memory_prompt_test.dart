@@ -6,7 +6,7 @@ void main() {
     final messages = buildChatMessages(
       systemPrompt: 'System',
       userPrompt: 'Question',
-      memoryBank: null,
+      memoryContext: null,
     );
 
     expect(messages, hasLength(2));
@@ -22,12 +22,12 @@ void main() {
     final messages = buildChatMessages(
       systemPrompt: 'System',
       userPrompt: 'Question',
-      memoryBank: 'Alex avoids peanuts.',
+      memoryContext: 'Alex avoids peanuts.',
     );
 
     expect(messages, hasLength(3));
     expect(messages[1].role, 'system');
-    expect(messages[1].content, contains('Relevant memory bank'));
+    expect(messages[1].content, contains('Relevant MenteDB memories'));
     expect(messages[1].content, contains('Alex avoids peanuts.'));
   });
 }

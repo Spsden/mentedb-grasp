@@ -16,7 +16,7 @@ The last dinner plan failed because it included a peanut sauce.
 List<ChatMessage> buildChatMessages({
   required String systemPrompt,
   required String userPrompt,
-  required String? memoryBank,
+  required String? memoryContext,
 }) {
   final messages = <ChatMessage>[];
   final trimmedSystem = systemPrompt.trim();
@@ -24,13 +24,13 @@ List<ChatMessage> buildChatMessages({
     messages.add(ChatMessage(role: 'system', content: trimmedSystem));
   }
 
-  final trimmedMemory = memoryBank?.trim();
+  final trimmedMemory = memoryContext?.trim();
   if (trimmedMemory != null && trimmedMemory.isNotEmpty) {
     messages.add(
       ChatMessage(
         role: 'system',
         content:
-            'Relevant memory bank:\n$trimmedMemory\n\nUse the memory bank when it is relevant. Do not claim it exists when it is not relevant.',
+            'Relevant MenteDB memories:\n$trimmedMemory\n\nUse these memories when they are relevant. Do not claim they exist when they are not relevant.',
       ),
     );
   }

@@ -12,11 +12,14 @@ dependencies:
     sdk: flutter
   mentedb_flutter:
     path: ..
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
 
 flutter:
   uses-material-design: true

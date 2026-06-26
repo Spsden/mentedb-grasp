@@ -1,18 +1,39 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mentedb_flutter/mentedb_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'src/memory_prompt.dart';
 import 'src/openai_compatible_client.dart';
 
-void main() {
-  runApp(const MemoryDemoApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    MemoryDemoApp(memoryStoreFactory: _openNativeMemoryStore),
+  );
+}
+
+typedef MemoryStoreFactory = Future<MenteDbMemoryStore> Function();
+
+Future<MenteDbMemoryStore> _openNativeMemoryStore() async {
+  final supportDirectory = await getApplicationSupportDirectory();
+  final databasePath =
+      '${supportDirectory.path}${Platform.pathSeparator}mentedb-memory-demo';
+  return RustMenteDbMemoryStore.open(path: databasePath);
 }
 
 class MemoryDemoApp extends StatelessWidget {
-  const MemoryDemoApp({super.key, OpenAiCompatibleChatClient? client})
-      : _client = client;
+  const MemoryDemoApp({
+    super.key,
+    OpenAiCompatibleChatClient? client,
+    MemoryStoreFactory? memoryStoreFactory,
+  })  : _client = client,
+        _memoryStoreFactory = memoryStoreFactory;
 
   final OpenAiCompatibleChatClient? _client;
+  final MemoryStoreFactory? _memoryStoreFactory;
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +61,23 @@ class MemoryDemoApp extends StatelessWidget {
           ),
         ),
       ),
-      home: MemoryDemoScreen(client: _client ?? OpenAiCompatibleChatClient()),
+      home: MemoryDemoScreen(
+        client: _client ?? OpenAiCompatibleChatClient(),
+        memoryStoreFactory: _memoryStoreFactory ?? _openNativeMemoryStore,
+      ),
     );
   }
 }
 
 class MemoryDemoScreen extends StatefulWidget {
-  const MemoryDemoScreen({super.key, required this.client});
+  const MemoryDemoScreen({
+    super.key,
+    required this.client,
+    required this.memoryStoreFactory,
+  });
 
   final OpenAiCompatibleChatClient client;
+  final MemoryStoreFactory memoryStoreFactory;
 
   @override
   State<MemoryDemoScreen> createState() => _MemoryDemoScreenState();
@@ -73,7 +102,15 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
   double _temperature = 0.2;
   bool _hideApiKey = true;
   bool _isRunning = false;
+  bool _runSleepMaintenance = true;
+  Future<MenteDbMemoryStore>? _memoryStoreFuture;
+  MenteDbMemoryStore? _memoryStore;
   String? _error;
+  String? _databasePath;
+  int? _memoryCount;
+  IngestMemoryBankResult? _ingestResult;
+  RecallMemoryContextResult? _recallResult;
+  BridgeSleepMaintenanceResult? _sleepResult;
   ChatCompletionResult? _withoutMemory;
   ChatCompletionResult? _withMemory;
 
@@ -87,8 +124,23 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     _systemController.dispose();
     _promptController.dispose();
     _memoryController.dispose();
+    final memoryStore = _memoryStore;
+    if (memoryStore != null) {
+      unawaited(memoryStore.close());
+    }
     widget.client.close();
     super.dispose();
+  }
+
+  Future<MenteDbMemoryStore> _ensureMemoryStore() async {
+    final current = _memoryStore;
+    if (current != null) {
+      return current;
+    }
+    final store = await (_memoryStoreFuture ??= widget.memoryStoreFactory());
+    _memoryStore = store;
+    _databasePath = store.databasePath;
+    return store;
   }
 
   Future<void> _runComparison() async {
@@ -113,11 +165,21 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     setState(() {
       _isRunning = true;
       _error = null;
+      _ingestResult = null;
+      _recallResult = null;
+      _sleepResult = null;
       _withoutMemory = null;
       _withMemory = null;
     });
 
     try {
+      final memoryStore = await _ensureMemoryStore();
+      final ingestResult = await memoryStore.replaceMemoryBank(memoryBank);
+      final sleepResult =
+          _runSleepMaintenance ? await memoryStore.runSleepMaintenance() : null;
+      final recallResult = await memoryStore.recallForPrompt(userPrompt);
+      final count = await memoryStore.memoryCount();
+
       final uri = resolveChatCompletionsUri(endpoint);
       final apiKey = _apiKeyController.text.trim();
       final providerHeaders = buildOpenRouterAttributionHeaders(
@@ -129,12 +191,12 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       final withoutMemoryMessages = buildChatMessages(
         systemPrompt: systemPrompt,
         userPrompt: userPrompt,
-        memoryBank: null,
+        memoryContext: null,
       );
       final withMemoryMessages = buildChatMessages(
         systemPrompt: systemPrompt,
         userPrompt: userPrompt,
-        memoryBank: memoryBank,
+        memoryContext: recallResult.context,
       );
 
       final responses = await Future.wait([
@@ -160,6 +222,11 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
         return;
       }
       setState(() {
+        _databasePath = memoryStore.databasePath;
+        _memoryCount = count;
+        _ingestResult = ingestResult;
+        _recallResult = recallResult;
+        _sleepResult = sleepResult;
         _withoutMemory = responses[0];
         _withMemory = responses[1];
       });
@@ -184,6 +251,9 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _systemController.text = defaultSystemPrompt;
       _promptController.text = sampleUserPrompt;
       _memoryController.text = sampleMemoryBank;
+      _ingestResult = null;
+      _recallResult = null;
+      _sleepResult = null;
       _withoutMemory = null;
       _withMemory = null;
       _error = null;
@@ -196,6 +266,9 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _modelController.text = defaultOpenRouterModel;
       _refererController.text = defaultOpenRouterReferer;
       _appTitleController.text = defaultOpenRouterTitle;
+      _ingestResult = null;
+      _recallResult = null;
+      _sleepResult = null;
       _withoutMemory = null;
       _withMemory = null;
       _error = null;
@@ -206,6 +279,9 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     setState(() {
       _withoutMemory = null;
       _withMemory = null;
+      _ingestResult = null;
+      _recallResult = null;
+      _sleepResult = null;
       _error = null;
     });
   }
@@ -269,6 +345,12 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
                     systemController: _systemController,
                     promptController: _promptController,
                     memoryController: _memoryController,
+                    runSleepMaintenance: _runSleepMaintenance,
+                    onRunSleepMaintenanceChanged: (value) {
+                      setState(() {
+                        _runSleepMaintenance = value;
+                      });
+                    },
                   ),
                   const SizedBox(height: 16),
                   FilledButton.icon(
@@ -285,6 +367,14 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
                     const SizedBox(height: 12),
                     _ErrorBanner(message: _error!),
                   ],
+                  const SizedBox(height: 16),
+                  _NativeStatusPanel(
+                    databasePath: _databasePath,
+                    memoryCount: _memoryCount,
+                    ingestResult: _ingestResult,
+                    recallResult: _recallResult,
+                    sleepResult: _sleepResult,
+                  ),
                   const SizedBox(height: 16),
                   _ResultGrid(
                     isWide: isWide,
@@ -456,11 +546,15 @@ class _PromptSection extends StatelessWidget {
     required this.systemController,
     required this.promptController,
     required this.memoryController,
+    required this.runSleepMaintenance,
+    required this.onRunSleepMaintenanceChanged,
   });
 
   final TextEditingController systemController;
   final TextEditingController promptController;
   final TextEditingController memoryController;
+  final bool runSleepMaintenance;
+  final ValueChanged<bool> onRunSleepMaintenanceChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -514,19 +608,116 @@ class _PromptSection extends StatelessWidget {
             _Panel(
               title: 'Memory bank',
               icon: Icons.account_tree_outlined,
-              child: TextField(
-                controller: memoryController,
-                minLines: 8,
-                maxLines: 14,
-                decoration: const InputDecoration(
-                  labelText: 'Memory text',
-                  alignLabelWithHint: true,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: memoryController,
+                    minLines: 8,
+                    maxLines: 14,
+                    decoration: const InputDecoration(
+                      labelText: 'Memory text',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    value: runSleepMaintenance,
+                    onChanged: onRunSleepMaintenanceChanged,
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Run sleep maintenance'),
+                    secondary: const Icon(Icons.bedtime_outlined),
+                  ),
+                ],
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _NativeStatusPanel extends StatelessWidget {
+  const _NativeStatusPanel({
+    required this.databasePath,
+    required this.memoryCount,
+    required this.ingestResult,
+    required this.recallResult,
+    required this.sleepResult,
+  });
+
+  final String? databasePath;
+  final int? memoryCount;
+  final IngestMemoryBankResult? ingestResult;
+  final RecallMemoryContextResult? recallResult;
+  final BridgeSleepMaintenanceResult? sleepResult;
+
+  @override
+  Widget build(BuildContext context) {
+    final recalled = recallResult;
+    final ingested = ingestResult;
+    final sleep = sleepResult;
+    final path = databasePath;
+
+    return _Panel(
+      title: 'MenteDB',
+      icon: Icons.storage_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _MetricChip(
+                icon: Icons.dataset_outlined,
+                label: 'Memories ${memoryCount ?? 0}',
+              ),
+              if (ingested != null)
+                _MetricChip(
+                  icon: Icons.upload_file,
+                  label: 'Stored ${ingested.stored}',
+                ),
+              if (ingested != null && ingested.replaced > 0)
+                _MetricChip(
+                  icon: Icons.swap_horiz,
+                  label: 'Replaced ${ingested.replaced}',
+                ),
+              if (recalled != null)
+                _MetricChip(
+                  icon: Icons.manage_search,
+                  label: 'Recalled ${recalled.memories.length}',
+                ),
+              if (recalled != null && recalled.truncated)
+                const _MetricChip(
+                  icon: Icons.content_cut,
+                  label: 'Context capped',
+                ),
+              if (sleep != null)
+                _MetricChip(
+                  icon: Icons.bedtime_outlined,
+                  label: sleep.leaseAcquired
+                      ? 'Sleep processed ${sleep.processedMemories}'
+                      : 'Sleep busy',
+                ),
+              if (sleep != null && sleep.enrichmentPending)
+                _MetricChip(
+                  icon: Icons.auto_awesome_motion,
+                  label: 'Enrich ${sleep.enrichmentCandidates}',
+                ),
+            ],
+          ),
+          if (path != null) ...[
+            const SizedBox(height: 10),
+            SelectableText(path),
+          ],
+          if (recalled != null && recalled.context.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            SelectableText(recalled.context),
+          ],
+        ],
+      ),
     );
   }
 }

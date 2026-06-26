@@ -1,0 +1,44 @@
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:mentedb_flutter/mentedb_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  test('stores, recalls, and maintains native MenteDB memories', () async {
+    final supportDirectory = await getApplicationSupportDirectory();
+    final databasePath = [
+      supportDirectory.path,
+      'mentedb-integration-${DateTime.now().microsecondsSinceEpoch}',
+    ].join(Platform.pathSeparator);
+
+    final store = await RustMenteDbMemoryStore.open(
+      path: databasePath,
+      embeddingDimensions: 64,
+    );
+    addTearDown(store.close);
+
+    final ingest = await store.replaceMemoryBank(
+      'Alex avoids peanuts.\nAlex prefers mushrooms on weekdays.',
+      source: 'integration_bank',
+      maxChunkChars: 160,
+    );
+    expect(ingest.stored, greaterThan(0));
+
+    final recall = await store.recallForPrompt(
+      'What should I remember for Alex?',
+      source: 'integration_bank',
+      limit: 4,
+      maxContextChars: 512,
+    );
+    expect(recall.memories, isNotEmpty);
+    expect(recall.context, contains('Alex'));
+
+    final sleep = await store.runSleepMaintenance(maxMemories: 100);
+    expect(sleep.leaseAcquired, isTrue);
+    expect(sleep.processedMemories, greaterThan(0));
+  });
+}
