@@ -1,0 +1,7 @@
+name: mentedb_flutter
+description: Dart facade and DTOs for embedding MenteDB in native Flutter apps.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
