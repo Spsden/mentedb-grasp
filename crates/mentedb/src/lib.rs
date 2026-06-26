@@ -95,12 +95,18 @@ pub use mentedb_query as query;
 /// Page based storage engine with WAL and buffer pool.
 pub use mentedb_storage as storage;
 
+/// Renderer-neutral graph projection DTOs for app clients.
+pub mod graph_projection;
 /// Unified process_turn orchestration.
 pub mod process_turn;
 
 /// Sleeptime enrichment pipeline (requires `enrichment` feature).
 #[cfg(feature = "enrichment")]
 pub mod enrichment;
+
+pub use graph_projection::{
+    GraphProjection, GraphProjectionConfig, GraphProjectionEdge, GraphProjectionNode,
+};
 
 /// Commonly used types, re-exported for convenience.
 pub mod prelude {
