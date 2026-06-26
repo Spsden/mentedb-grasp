@@ -17,7 +17,7 @@ use mentedb_core::types::AgentId;
 use mentedb_embedding::provider::EmbeddingProvider;
 use mentedb_extraction::{ExtractionConfig, ExtractionPipeline, HttpExtractionProvider};
 
-use crate::MenteDb;
+use crate::{MenteDb, MenteResult};
 
 /// Result of a full enrichment run.
 #[derive(Debug, Default)]
@@ -243,6 +243,35 @@ pub async fn run_enrichment<J: LlmJudge>(
     );
 
     result
+}
+
+/// Try to run enrichment while holding the sleep maintenance lease.
+///
+/// Returns `Ok(None)` when another process already owns the lease. This is the
+/// preferred entry point for background workers.
+pub async fn try_run_enrichment_with_lease<J: LlmJudge>(
+    db: &MenteDb,
+    extraction_config: ExtractionConfig,
+    embedder: &dyn EmbeddingProvider,
+    cognitive_llm: Option<&CognitiveLlmService<J>>,
+    current_turn: u64,
+    skip_extraction: bool,
+) -> MenteResult<Option<EnrichmentResult>> {
+    let Some(_lease) = db.try_acquire_sleep_maintenance_lease()? else {
+        return Ok(None);
+    };
+
+    Ok(Some(
+        run_enrichment(
+            db,
+            extraction_config,
+            embedder,
+            cognitive_llm,
+            current_turn,
+            skip_extraction,
+        )
+        .await,
+    ))
 }
 
 /// Phase 2b: LLM entity resolution for unresolved entities.
