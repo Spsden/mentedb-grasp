@@ -2,6 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+const defaultOpenRouterEndpoint = 'https://openrouter.ai/api/v1';
+const defaultOpenRouterModel = '~openai/gpt-latest';
+const defaultOpenRouterReferer = 'https://mentedb.local';
+const defaultOpenRouterTitle = 'MenteDB Memory Demo';
+
 final class ChatMessage {
   const ChatMessage({required this.role, required this.content});
 
@@ -48,6 +53,7 @@ final class OpenAiCompatibleChatClient {
     required String model,
     required double temperature,
     required List<ChatMessage> messages,
+    Map<String, String> headers = const {},
   }) async {
     final startedAt = DateTime.now();
     final request = await _httpClient.postUrl(endpoint).timeout(timeout);
@@ -55,6 +61,13 @@ final class OpenAiCompatibleChatClient {
     request.headers.set(HttpHeaders.acceptHeader, ContentType.json.mimeType);
     if (apiKey != null && apiKey.isNotEmpty) {
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $apiKey');
+    }
+    for (final header in headers.entries) {
+      final name = header.key.trim();
+      final value = header.value.trim();
+      if (name.isNotEmpty && value.isNotEmpty) {
+        request.headers.set(name, value);
+      }
     }
 
     final payload = jsonEncode(<String, Object?>{
@@ -86,6 +99,32 @@ final class OpenAiCompatibleChatClient {
   void close() {
     _httpClient.close(force: true);
   }
+}
+
+Map<String, String> buildOpenRouterAttributionHeaders({
+  required Uri endpoint,
+  required String referer,
+  required String title,
+}) {
+  if (!isOpenRouterEndpoint(endpoint)) {
+    return const {};
+  }
+
+  final headers = <String, String>{};
+  final trimmedReferer = referer.trim();
+  final trimmedTitle = title.trim();
+  if (trimmedReferer.isNotEmpty) {
+    headers['HTTP-Referer'] = trimmedReferer;
+  }
+  if (trimmedTitle.isNotEmpty) {
+    headers['X-OpenRouter-Title'] = trimmedTitle;
+  }
+  return headers;
+}
+
+bool isOpenRouterEndpoint(Uri endpoint) {
+  final host = endpoint.host.toLowerCase();
+  return host == 'openrouter.ai' || host.endsWith('.openrouter.ai');
 }
 
 Uri resolveChatCompletionsUri(String endpoint) {

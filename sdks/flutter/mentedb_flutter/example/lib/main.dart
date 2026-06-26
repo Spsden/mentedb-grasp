@@ -56,10 +56,16 @@ class MemoryDemoScreen extends StatefulWidget {
 
 class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
   final _endpointController = TextEditingController(
-    text: 'https://api.openai.com/v1',
+    text: defaultOpenRouterEndpoint,
   );
   final _apiKeyController = TextEditingController();
-  final _modelController = TextEditingController(text: 'gpt-4o-mini');
+  final _modelController = TextEditingController(text: defaultOpenRouterModel);
+  final _refererController = TextEditingController(
+    text: defaultOpenRouterReferer,
+  );
+  final _appTitleController = TextEditingController(
+    text: defaultOpenRouterTitle,
+  );
   final _systemController = TextEditingController(text: defaultSystemPrompt);
   final _promptController = TextEditingController(text: sampleUserPrompt);
   final _memoryController = TextEditingController(text: sampleMemoryBank);
@@ -76,6 +82,8 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     _endpointController.dispose();
     _apiKeyController.dispose();
     _modelController.dispose();
+    _refererController.dispose();
+    _appTitleController.dispose();
     _systemController.dispose();
     _promptController.dispose();
     _memoryController.dispose();
@@ -112,6 +120,11 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     try {
       final uri = resolveChatCompletionsUri(endpoint);
       final apiKey = _apiKeyController.text.trim();
+      final providerHeaders = buildOpenRouterAttributionHeaders(
+        endpoint: uri,
+        referer: _refererController.text,
+        title: _appTitleController.text,
+      );
       final systemPrompt = _systemController.text.trim();
       final withoutMemoryMessages = buildChatMessages(
         systemPrompt: systemPrompt,
@@ -131,6 +144,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
           model: model,
           temperature: _temperature,
           messages: withoutMemoryMessages,
+          headers: providerHeaders,
         ),
         widget.client.complete(
           endpoint: uri,
@@ -138,6 +152,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
           model: model,
           temperature: _temperature,
           messages: withMemoryMessages,
+          headers: providerHeaders,
         ),
       ]);
 
@@ -175,6 +190,18 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     });
   }
 
+  void _useOpenRouterDefaults() {
+    setState(() {
+      _endpointController.text = defaultOpenRouterEndpoint;
+      _modelController.text = defaultOpenRouterModel;
+      _refererController.text = defaultOpenRouterReferer;
+      _appTitleController.text = defaultOpenRouterTitle;
+      _withoutMemory = null;
+      _withMemory = null;
+      _error = null;
+    });
+  }
+
   void _clearOutputs() {
     setState(() {
       _withoutMemory = null;
@@ -192,6 +219,11 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       appBar: AppBar(
         title: const Text('MenteDB Memory Demo'),
         actions: [
+          IconButton(
+            tooltip: 'Use OpenRouter',
+            onPressed: _useOpenRouterDefaults,
+            icon: const Icon(Icons.route),
+          ),
           IconButton(
             tooltip: 'Load sample',
             onPressed: _loadSample,
@@ -217,6 +249,8 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
                     endpointController: _endpointController,
                     apiKeyController: _apiKeyController,
                     modelController: _modelController,
+                    refererController: _refererController,
+                    appTitleController: _appTitleController,
                     hideApiKey: _hideApiKey,
                     temperature: _temperature,
                     onToggleApiKey: () {
@@ -274,6 +308,8 @@ class _SettingsSection extends StatelessWidget {
     required this.endpointController,
     required this.apiKeyController,
     required this.modelController,
+    required this.refererController,
+    required this.appTitleController,
     required this.hideApiKey,
     required this.temperature,
     required this.onToggleApiKey,
@@ -283,6 +319,8 @@ class _SettingsSection extends StatelessWidget {
   final TextEditingController endpointController;
   final TextEditingController apiKeyController;
   final TextEditingController modelController;
+  final TextEditingController refererController;
+  final TextEditingController appTitleController;
   final bool hideApiKey;
   final double temperature;
   final VoidCallback onToggleApiKey;
@@ -321,6 +359,21 @@ class _SettingsSection extends StatelessWidget {
             ),
           ),
         );
+        final refererField = TextField(
+          controller: refererController,
+          decoration: const InputDecoration(
+            labelText: 'OpenRouter referer',
+            prefixIcon: Icon(Icons.public),
+          ),
+          keyboardType: TextInputType.url,
+        );
+        final titleField = TextField(
+          controller: appTitleController,
+          decoration: const InputDecoration(
+            labelText: 'OpenRouter app title',
+            prefixIcon: Icon(Icons.badge_outlined),
+          ),
+        );
 
         return _Panel(
           title: 'Connection',
@@ -329,14 +382,27 @@ class _SettingsSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (isWide)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Column(
                   children: [
-                    Expanded(flex: 3, child: endpointField),
-                    const SizedBox(width: 12),
-                    Expanded(flex: 2, child: modelField),
-                    const SizedBox(width: 12),
-                    Expanded(flex: 3, child: apiKeyField),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 3, child: endpointField),
+                        const SizedBox(width: 12),
+                        Expanded(flex: 2, child: modelField),
+                        const SizedBox(width: 12),
+                        Expanded(flex: 3, child: apiKeyField),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: refererField),
+                        const SizedBox(width: 12),
+                        Expanded(child: titleField),
+                      ],
+                    ),
                   ],
                 )
               else
@@ -348,6 +414,10 @@ class _SettingsSection extends StatelessWidget {
                     modelField,
                     const SizedBox(height: 12),
                     apiKeyField,
+                    const SizedBox(height: 12),
+                    refererField,
+                    const SizedBox(height: 12),
+                    titleField,
                   ],
                 ),
               const SizedBox(height: 14),
