@@ -99,6 +99,8 @@ pub use mentedb_storage as storage;
 pub mod graph_projection;
 /// Unified process_turn orchestration.
 pub mod process_turn;
+/// Bounded sleep maintenance for app background workers.
+pub mod sleep;
 
 /// Sleeptime enrichment pipeline (requires `enrichment` feature).
 #[cfg(feature = "enrichment")]
@@ -106,6 +108,10 @@ pub mod enrichment;
 
 pub use graph_projection::{
     GraphProjection, GraphProjectionConfig, GraphProjectionEdge, GraphProjectionNode,
+};
+pub use sleep::{
+    SleepMaintenanceConfig, SleepMaintenanceIssue, SleepMaintenanceLease, SleepMaintenanceResult,
+    SleepMaintenanceStage,
 };
 
 /// Commonly used types, re-exported for convenience.
