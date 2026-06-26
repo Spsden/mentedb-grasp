@@ -1,0 +1,22 @@
+[package]
+name = "mentedb_flutter_bridge"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+anyhow = "1"
+flutter_rust_bridge = "=2.13.0-beta.2"
+mentedb = { path = "../../../../crates/mentedb" }
+mentedb-core = { path = "../../../../crates/mentedb-core" }
+mentedb-embedding = { path = "../../../../crates/mentedb-embedding" }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

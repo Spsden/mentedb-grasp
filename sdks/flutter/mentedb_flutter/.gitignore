@@ -1,0 +1,12 @@
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+pubspec.lock
+android/app/
+ios/Flutter/
+ios/Runner/
+linux/flutter/
+macos/Flutter/
+windows/flutter/

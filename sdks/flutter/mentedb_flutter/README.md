@@ -1,21 +1,27 @@
-# MenteDB Flutter SDK Contract
+# MenteDB Flutter
 
-This package contains the stable Dart facade and DTOs for a native Flutter
-integration. It intentionally does not check in generated Flutter Rust Bridge
-output. Generated bindings or a custom Dart FFI adapter should implement
-`MenteDbNativeBridge` and return the DTOs exported by this package.
+This package embeds MenteDB in native Flutter apps through Flutter Rust Bridge.
+It does not target Flutter web.
 
-Recommended native shape:
+The native bridge lives in `rust/` and is bundled with Cargokit for Android,
+iOS, macOS, Linux, and Windows. The public Dart entrypoint is
+`RustMenteDbMemoryStore`, which opens a local MenteDB directory and exposes:
 
-1. Use Flutter Rust Bridge for Android, iOS, macOS, Windows, and Linux.
-2. Keep one Rust `MenteDb` handle per user vault or app profile.
-3. Expose graph projection through `MenteDb::graph_projection`.
-4. Run background maintenance through `MenteDb::try_run_sleep_maintenance`.
-5. Run LLM enrichment through `try_run_enrichment_with_lease` when the Rust
-   crate is built with the `enrichment` feature.
+1. Text memory bank ingest as real `MemoryNode` records.
+2. Hybrid recall for prompt context.
+3. Leased sleep maintenance for background jobs.
+4. Explicit close and flush behavior through the Rust facade.
 
-This package does not target Flutter web.
+The bridge uses MenteDB's deterministic hash embedder for local demo recall so
+the example can run without an embedding API key. Production apps should swap
+that Rust provider for the app's selected local or remote embedding provider.
 
-The runnable example app under `example/` compares an OpenAI-compatible chat
-completion with and without memory context, and includes a text memory bank that
-can be edited at runtime.
+Regenerate bindings after changing Rust bridge types:
+
+```bash
+flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+```
+
+The runnable example under `example/` compares an OpenAI-compatible chat
+completion with no memory against one that receives context recalled from the
+native MenteDB database.
