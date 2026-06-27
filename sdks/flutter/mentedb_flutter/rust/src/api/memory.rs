@@ -1,11 +1,13 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, anyhow, bail};
+use mentedb::context::DeltaTracker;
 use mentedb::prelude::{AgentId, MemoryEdge, MemoryId, MemoryNode};
+use mentedb::process_turn::ProcessTurnInput as CoreProcessTurnInput;
 use mentedb::{GraphProjectionConfig, MenteDb, SleepMaintenanceConfig};
 use mentedb_core::edge::EdgeType;
 use mentedb_core::memory::{AttributeValue, MemoryType};
@@ -144,6 +146,103 @@ pub struct StoreConversationTurnResult {
     pub memory_count: u32,
 }
 
+/// Request used to run the full MenteDB conversation pipeline.
+#[derive(Debug, Clone)]
+pub struct ProcessTurnRequest {
+    /// Database handle returned by `open_database`.
+    pub handle: u32,
+    /// User message for this turn.
+    pub user_message: String,
+    /// Assistant response when the model has already answered.
+    pub assistant_response: Option<String>,
+    /// Monotonic turn number chosen by the app.
+    pub turn_id: u32,
+    /// Optional workspace, chat, or project scope.
+    pub project_context: Option<String>,
+    /// Optional stable agent identifier. The session agent is used when empty.
+    pub agent_id: Option<String>,
+    /// Flush indexes, graph, and storage after processing the turn.
+    pub flush: bool,
+}
+
+/// A scored memory returned by the process_turn retrieval stage.
+#[derive(Debug, Clone)]
+pub struct ProcessTurnContextItem {
+    pub id: String,
+    pub content: String,
+    pub score: f32,
+    pub memory_type: BridgeMemoryType,
+    pub tags: Vec<String>,
+    pub created_at_micros: i64,
+    pub salience: f32,
+    pub confidence: f32,
+    pub is_new: bool,
+    pub from_cache: bool,
+    pub scope: String,
+}
+
+/// A memory written during a process_turn call.
+#[derive(Debug, Clone)]
+pub struct ProcessTurnStoredMemory {
+    pub id: String,
+    pub content: String,
+    pub memory_type: BridgeMemoryType,
+    pub tags: Vec<String>,
+    pub salience: f32,
+    pub confidence: f32,
+}
+
+/// Pain signal matched during process_turn.
+#[derive(Debug, Clone)]
+pub struct ProcessTurnPainWarning {
+    pub signal_id: String,
+    pub intensity: f32,
+    pub description: String,
+}
+
+/// Action detected from the current turn.
+#[derive(Debug, Clone)]
+pub struct ProcessTurnDetectedAction {
+    pub action_type: String,
+    pub detail: String,
+}
+
+/// Memory proactively recalled because an action was detected.
+#[derive(Debug, Clone)]
+pub struct ProcessTurnProactiveRecall {
+    pub memory_id: String,
+    pub content: String,
+    pub relevance: f32,
+    pub action_type: String,
+}
+
+/// Full Dart DTO for MenteDB's unified process_turn pipeline.
+#[derive(Debug, Clone)]
+pub struct ProcessTurnResult {
+    pub context: Vec<ProcessTurnContextItem>,
+    pub context_text: String,
+    pub stored: u32,
+    pub stored_ids: Vec<String>,
+    pub stored_memories: Vec<ProcessTurnStoredMemory>,
+    pub episodic_id: Option<String>,
+    pub pain_warnings: Vec<ProcessTurnPainWarning>,
+    pub cache_hit: bool,
+    pub inference_actions: u32,
+    pub detected_actions: Vec<ProcessTurnDetectedAction>,
+    pub proactive_recalls: Vec<ProcessTurnProactiveRecall>,
+    pub correction_id: Option<String>,
+    pub sentiment: f32,
+    pub phantom_count: u32,
+    pub contradiction_count: u32,
+    pub predicted_topics: Vec<String>,
+    pub facts_extracted: u32,
+    pub edges_created: u32,
+    pub enrichment_pending: bool,
+    pub delta_added: Vec<String>,
+    pub delta_removed: Vec<String>,
+    pub memory_count: u32,
+}
+
 /// Edge type accepted by the Flutter bridge.
 #[derive(Debug, Clone, Copy)]
 pub enum BridgeEdgeType {
@@ -277,6 +376,7 @@ pub fn open_database(request: OpenDatabaseRequest) -> Result<OpenDatabaseResult>
 
     let session = Arc::new(DbSession {
         db: Mutex::new(db),
+        delta_tracker: Mutex::new(DeltaTracker::new()),
         path: path.clone(),
         agent_id,
         embedding_dimensions,
@@ -535,6 +635,50 @@ pub fn store_conversation_turn(
     })
 }
 
+/// Process a conversation turn through MenteDB's unified cognitive pipeline.
+pub fn process_turn(request: ProcessTurnRequest) -> Result<ProcessTurnResult> {
+    let user_message = normalize_message(&request.user_message, "user_message")?;
+    let assistant_response = request
+        .assistant_response
+        .map(|value| normalize_message(&value, "assistant_response"))
+        .transpose()?;
+    let project_context = match request.project_context {
+        Some(value) if !value.trim().is_empty() => Some(normalize_source(&value)?),
+        _ => None,
+    };
+
+    let session = get_session(request.handle)?;
+    let agent_id = match request.agent_id {
+        Some(value) if !value.trim().is_empty() => Some(parse_agent_id(Some(&value))?.0),
+        _ => Some(session.agent_id.0),
+    };
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+    let mut delta_tracker = session
+        .delta_tracker
+        .lock()
+        .map_err(|_| anyhow!("delta tracker lock was poisoned"))?;
+
+    let input = CoreProcessTurnInput {
+        user_message,
+        assistant_response,
+        turn_id: u64::from(request.turn_id),
+        project_context,
+        agent_id,
+    };
+    let result = db
+        .process_turn(&input, &mut delta_tracker)
+        .context("failed to process conversation turn")?;
+
+    if request.flush {
+        db.flush().context("failed to flush processed turn")?;
+    }
+
+    bridge_process_turn_result(&db, result)
+}
+
 /// Build a bounded graph projection from the native MenteDB graph.
 pub fn graph_projection(request: GraphProjectionRequest) -> Result<BridgeGraphProjection> {
     let center = match request.center {
@@ -670,6 +814,7 @@ fn registry() -> &'static Mutex<SessionRegistry> {
 #[flutter_rust_bridge::frb(ignore)]
 struct DbSession {
     db: Mutex<MenteDb>,
+    delta_tracker: Mutex<DeltaTracker>,
     path: PathBuf,
     agent_id: AgentId,
     embedding_dimensions: u32,
@@ -753,6 +898,155 @@ impl From<EdgeType> for BridgeEdgeType {
             EdgeType::Derived => BridgeEdgeType::Derived,
             EdgeType::PartOf => BridgeEdgeType::PartOf,
         }
+    }
+}
+
+fn bridge_process_turn_result(
+    db: &MenteDb,
+    value: mentedb::process_turn::ProcessTurnResult,
+) -> Result<ProcessTurnResult> {
+    let delta_added_ids: HashSet<MemoryId> = value.delta_added.iter().copied().collect();
+    let context = value
+        .context
+        .iter()
+        .map(|scored| bridge_context_item(scored, &delta_added_ids, value.cache_hit))
+        .collect::<Result<Vec<_>>>()?;
+    let stored_memories = value
+        .stored_ids
+        .iter()
+        .map(|id| bridge_stored_memory(db, *id))
+        .collect::<Result<Vec<_>>>()?;
+    let stored_ids = value
+        .stored_ids
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
+    let context_text = format_process_turn_context(&context);
+
+    Ok(ProcessTurnResult {
+        context,
+        context_text,
+        stored: to_u32(stored_ids.len(), "stored")?,
+        stored_ids,
+        stored_memories,
+        episodic_id: value.episodic_id.map(|id| id.to_string()),
+        pain_warnings: value
+            .pain_warnings
+            .into_iter()
+            .map(|warning| ProcessTurnPainWarning {
+                signal_id: warning.signal_id.to_string(),
+                intensity: warning.intensity,
+                description: warning.description,
+            })
+            .collect(),
+        cache_hit: value.cache_hit,
+        inference_actions: value.inference_actions,
+        detected_actions: value
+            .detected_actions
+            .into_iter()
+            .map(|action| ProcessTurnDetectedAction {
+                action_type: action.action_type,
+                detail: action.detail,
+            })
+            .collect(),
+        proactive_recalls: value
+            .proactive_recalls
+            .into_iter()
+            .map(|recall| ProcessTurnProactiveRecall {
+                memory_id: recall.memory_id.to_string(),
+                content: recall.content,
+                relevance: recall.relevance,
+                action_type: recall.action_type,
+            })
+            .collect(),
+        correction_id: value.correction_id.map(|id| id.to_string()),
+        sentiment: value.sentiment,
+        phantom_count: to_u32(value.phantom_count, "phantom_count")?,
+        contradiction_count: to_u32(value.contradiction_count, "contradiction_count")?,
+        predicted_topics: value.predicted_topics,
+        facts_extracted: to_u32(value.facts_extracted, "facts_extracted")?,
+        edges_created: value.edges_created,
+        enrichment_pending: value.enrichment_pending,
+        delta_added: value.delta_added.iter().map(ToString::to_string).collect(),
+        delta_removed: value
+            .delta_removed
+            .iter()
+            .map(ToString::to_string)
+            .collect(),
+        memory_count: to_u32(db.memory_count(), "memory_count")?,
+    })
+}
+
+fn bridge_context_item(
+    scored: &mentedb::context::ScoredMemory,
+    delta_added_ids: &HashSet<MemoryId>,
+    cache_hit: bool,
+) -> Result<ProcessTurnContextItem> {
+    let memory = &scored.memory;
+    Ok(ProcessTurnContextItem {
+        id: memory.id.to_string(),
+        content: memory.content.clone(),
+        score: scored.score,
+        memory_type: memory.memory_type.into(),
+        tags: memory.tags.clone(),
+        created_at_micros: to_i64_u64(memory.created_at, "context_created_at_micros")?,
+        salience: memory.salience,
+        confidence: memory.confidence,
+        is_new: delta_added_ids.contains(&memory.id),
+        from_cache: cache_hit,
+        scope: infer_memory_scope(&memory.tags),
+    })
+}
+
+fn bridge_stored_memory(db: &MenteDb, id: MemoryId) -> Result<ProcessTurnStoredMemory> {
+    let memory = db
+        .get_memory(id)
+        .with_context(|| format!("failed to load stored memory {id}"))?;
+    Ok(ProcessTurnStoredMemory {
+        id: memory.id.to_string(),
+        content: memory.content,
+        memory_type: memory.memory_type.into(),
+        tags: memory.tags,
+        salience: memory.salience,
+        confidence: memory.confidence,
+    })
+}
+
+fn infer_memory_scope(tags: &[String]) -> String {
+    if tags.iter().any(|tag| tag == "scope:always") {
+        return "always".to_string();
+    }
+    if tags.iter().any(|tag| tag.starts_with("scope:project:")) {
+        return "project".to_string();
+    }
+    "contextual".to_string()
+}
+
+fn format_process_turn_context(memories: &[ProcessTurnContextItem]) -> String {
+    let mut context = String::new();
+    for (index, memory) in memories.iter().enumerate() {
+        let cleaned = memory.content.replace('\n', " ");
+        let line = format!(
+            "{}. [{}] {} (score {:.3}, scope {})\n",
+            index + 1,
+            bridge_memory_type_label(memory.memory_type),
+            cleaned,
+            memory.score,
+            memory.scope
+        );
+        context.push_str(&line);
+    }
+    context.trim().to_string()
+}
+
+fn bridge_memory_type_label(memory_type: BridgeMemoryType) -> &'static str {
+    match memory_type {
+        BridgeMemoryType::Episodic => "episodic",
+        BridgeMemoryType::Semantic => "semantic",
+        BridgeMemoryType::Procedural => "procedural",
+        BridgeMemoryType::AntiPattern => "anti_pattern",
+        BridgeMemoryType::Reasoning => "reasoning",
+        BridgeMemoryType::Correction => "correction",
     }
 }
 
@@ -1071,6 +1365,26 @@ mod tests {
         assert_eq!(turn.stored, 2);
         assert_eq!(turn.memory_count, 3);
 
+        let processed = process_turn(ProcessTurnRequest {
+            handle: opened.handle,
+            user_message: "Deploy a vegetarian dinner plan without peanut sauce.".to_string(),
+            assistant_response: Some("Use mushrooms and keep nut sauces out.".to_string()),
+            turn_id: 2,
+            project_context: Some("test_project".to_string()),
+            agent_id: None,
+            flush: true,
+        })
+        .expect("process turn");
+        assert_eq!(processed.stored, 1);
+        assert!(processed.episodic_id.is_some());
+        assert!(!processed.context_text.is_empty());
+        assert!(
+            processed
+                .detected_actions
+                .iter()
+                .any(|action| action.action_type == "deployment")
+        );
+
         let graph = graph_projection(GraphProjectionRequest {
             handle: opened.handle,
             center: None,
@@ -1082,7 +1396,7 @@ mod tests {
             include_edges: true,
         })
         .expect("graph projection");
-        assert!(graph.nodes.len() >= 3);
+        assert!(graph.nodes.len() >= 4);
         assert!(
             graph
                 .edges
@@ -1106,7 +1420,7 @@ mod tests {
         })
         .expect("run sleep maintenance");
         assert!(sleep.lease_acquired);
-        assert_eq!(sleep.processed_memories, 3);
+        assert!(sleep.processed_memories >= 4);
 
         close_database(opened.handle).expect("close database");
     }

@@ -6,15 +6,15 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `add_conversation_metadata`, `append_chunk_line`, `build_embedded_memory`, `chunk_memory_bank`, `clear_source_memories`, `current_timestamp_micros`, `format_context`, `from_core`, `get_session`, `get`, `insert`, `lease_busy`, `normalize_database_path`, `normalize_message`, `normalize_source`, `parse_agent_id`, `registry`, `remove`, `split_long_line`, `to_i64_u64`, `to_i64`, `to_u32`, `validate_positive_u32`
+// These functions are ignored because they are not marked as `pub`: `add_conversation_metadata`, `append_chunk_line`, `bridge_context_item`, `bridge_memory_type_label`, `bridge_process_turn_result`, `bridge_stored_memory`, `build_embedded_memory`, `chunk_memory_bank`, `clear_source_memories`, `current_timestamp_micros`, `format_context`, `format_process_turn_context`, `from_core`, `get_session`, `get`, `infer_memory_scope`, `insert`, `lease_busy`, `normalize_database_path`, `normalize_message`, `normalize_source`, `parse_agent_id`, `registry`, `remove`, `split_long_line`, `to_i64_u64`, `to_i64`, `to_u32`, `validate_positive_u32`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DbSession`, `SessionRegistry`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`
 // These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 /// Open or create a MenteDB database and return a process-local session handle.
-Future<OpenDatabaseResult> openDatabase({
-  required OpenDatabaseRequest request,
-}) => RustLib.instance.api.crateApiMemoryOpenDatabase(request: request);
+Future<OpenDatabaseResult> openDatabase(
+        {required OpenDatabaseRequest request}) =>
+    RustLib.instance.api.crateApiMemoryOpenDatabase(request: request);
 
 /// Close a MenteDB session and flush persisted state.
 Future<void> closeDatabase({required int handle}) =>
@@ -29,30 +29,33 @@ Future<int> memoryCount({required int handle}) =>
     RustLib.instance.api.crateApiMemoryMemoryCount(handle: handle);
 
 /// Store user text as real MenteDB memory nodes.
-Future<IngestMemoryBankResult> ingestMemoryBank({
-  required IngestMemoryBankRequest request,
-}) => RustLib.instance.api.crateApiMemoryIngestMemoryBank(request: request);
+Future<IngestMemoryBankResult> ingestMemoryBank(
+        {required IngestMemoryBankRequest request}) =>
+    RustLib.instance.api.crateApiMemoryIngestMemoryBank(request: request);
 
 /// Recall a bounded MenteDB context for a chat prompt.
-Future<RecallMemoryContextResult> recallMemoryContext({
-  required RecallMemoryContextRequest request,
-}) => RustLib.instance.api.crateApiMemoryRecallMemoryContext(request: request);
+Future<RecallMemoryContextResult> recallMemoryContext(
+        {required RecallMemoryContextRequest request}) =>
+    RustLib.instance.api.crateApiMemoryRecallMemoryContext(request: request);
 
 /// Store a completed user and assistant exchange as recent episodic memory.
-Future<StoreConversationTurnResult> storeConversationTurn({
-  required StoreConversationTurnRequest request,
-}) =>
+Future<StoreConversationTurnResult> storeConversationTurn(
+        {required StoreConversationTurnRequest request}) =>
     RustLib.instance.api.crateApiMemoryStoreConversationTurn(request: request);
 
+/// Process a conversation turn through MenteDB's unified cognitive pipeline.
+Future<ProcessTurnResult> processTurn({required ProcessTurnRequest request}) =>
+    RustLib.instance.api.crateApiMemoryProcessTurn(request: request);
+
 /// Build a bounded graph projection from the native MenteDB graph.
-Future<BridgeGraphProjection> graphProjection({
-  required GraphProjectionRequest request,
-}) => RustLib.instance.api.crateApiMemoryGraphProjection(request: request);
+Future<BridgeGraphProjection> graphProjection(
+        {required GraphProjectionRequest request}) =>
+    RustLib.instance.api.crateApiMemoryGraphProjection(request: request);
 
 /// Run MenteDB sleep maintenance under the database lease.
-Future<BridgeSleepMaintenanceResult> runSleepMaintenance({
-  required RunSleepMaintenanceRequest request,
-}) => RustLib.instance.api.crateApiMemoryRunSleepMaintenance(request: request);
+Future<BridgeSleepMaintenanceResult> runSleepMaintenance(
+        {required RunSleepMaintenanceRequest request}) =>
+    RustLib.instance.api.crateApiMemoryRunSleepMaintenance(request: request);
 
 /// Edge type accepted by the Flutter bridge.
 enum BridgeEdgeType {
@@ -64,6 +67,7 @@ enum BridgeEdgeType {
   supersedes,
   derived,
   partOf,
+  ;
 }
 
 /// Renderer-neutral graph projection returned through FRB.
@@ -210,6 +214,7 @@ enum BridgeMemoryType {
   antiPattern,
   reasoning,
   correction,
+  ;
 }
 
 /// A single recalled memory with score and metadata.
@@ -591,6 +596,347 @@ class OpenDatabaseResult {
           agentId == other.agentId &&
           embeddingDimensions == other.embeddingDimensions &&
           memoryCount == other.memoryCount;
+}
+
+/// A scored memory returned by the process_turn retrieval stage.
+class ProcessTurnContextItem {
+  final String id;
+  final String content;
+  final double score;
+  final BridgeMemoryType memoryType;
+  final List<String> tags;
+  final PlatformInt64 createdAtMicros;
+  final double salience;
+  final double confidence;
+  final bool isNew;
+  final bool fromCache;
+  final String scope;
+
+  const ProcessTurnContextItem({
+    required this.id,
+    required this.content,
+    required this.score,
+    required this.memoryType,
+    required this.tags,
+    required this.createdAtMicros,
+    required this.salience,
+    required this.confidence,
+    required this.isNew,
+    required this.fromCache,
+    required this.scope,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      content.hashCode ^
+      score.hashCode ^
+      memoryType.hashCode ^
+      tags.hashCode ^
+      createdAtMicros.hashCode ^
+      salience.hashCode ^
+      confidence.hashCode ^
+      isNew.hashCode ^
+      fromCache.hashCode ^
+      scope.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProcessTurnContextItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          content == other.content &&
+          score == other.score &&
+          memoryType == other.memoryType &&
+          tags == other.tags &&
+          createdAtMicros == other.createdAtMicros &&
+          salience == other.salience &&
+          confidence == other.confidence &&
+          isNew == other.isNew &&
+          fromCache == other.fromCache &&
+          scope == other.scope;
+}
+
+/// Action detected from the current turn.
+class ProcessTurnDetectedAction {
+  final String actionType;
+  final String detail;
+
+  const ProcessTurnDetectedAction({
+    required this.actionType,
+    required this.detail,
+  });
+
+  @override
+  int get hashCode => actionType.hashCode ^ detail.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProcessTurnDetectedAction &&
+          runtimeType == other.runtimeType &&
+          actionType == other.actionType &&
+          detail == other.detail;
+}
+
+/// Pain signal matched during process_turn.
+class ProcessTurnPainWarning {
+  final String signalId;
+  final double intensity;
+  final String description;
+
+  const ProcessTurnPainWarning({
+    required this.signalId,
+    required this.intensity,
+    required this.description,
+  });
+
+  @override
+  int get hashCode =>
+      signalId.hashCode ^ intensity.hashCode ^ description.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProcessTurnPainWarning &&
+          runtimeType == other.runtimeType &&
+          signalId == other.signalId &&
+          intensity == other.intensity &&
+          description == other.description;
+}
+
+/// Memory proactively recalled because an action was detected.
+class ProcessTurnProactiveRecall {
+  final String memoryId;
+  final String content;
+  final double relevance;
+  final String actionType;
+
+  const ProcessTurnProactiveRecall({
+    required this.memoryId,
+    required this.content,
+    required this.relevance,
+    required this.actionType,
+  });
+
+  @override
+  int get hashCode =>
+      memoryId.hashCode ^
+      content.hashCode ^
+      relevance.hashCode ^
+      actionType.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProcessTurnProactiveRecall &&
+          runtimeType == other.runtimeType &&
+          memoryId == other.memoryId &&
+          content == other.content &&
+          relevance == other.relevance &&
+          actionType == other.actionType;
+}
+
+/// Request used to run the full MenteDB conversation pipeline.
+class ProcessTurnRequest {
+  /// Database handle returned by `open_database`.
+  final int handle;
+
+  /// User message for this turn.
+  final String userMessage;
+
+  /// Assistant response when the model has already answered.
+  final String? assistantResponse;
+
+  /// Monotonic turn number chosen by the app.
+  final int turnId;
+
+  /// Optional workspace, chat, or project scope.
+  final String? projectContext;
+
+  /// Optional stable agent identifier. The session agent is used when empty.
+  final String? agentId;
+
+  /// Flush indexes, graph, and storage after processing the turn.
+  final bool flush;
+
+  const ProcessTurnRequest({
+    required this.handle,
+    required this.userMessage,
+    this.assistantResponse,
+    required this.turnId,
+    this.projectContext,
+    this.agentId,
+    required this.flush,
+  });
+
+  @override
+  int get hashCode =>
+      handle.hashCode ^
+      userMessage.hashCode ^
+      assistantResponse.hashCode ^
+      turnId.hashCode ^
+      projectContext.hashCode ^
+      agentId.hashCode ^
+      flush.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProcessTurnRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          userMessage == other.userMessage &&
+          assistantResponse == other.assistantResponse &&
+          turnId == other.turnId &&
+          projectContext == other.projectContext &&
+          agentId == other.agentId &&
+          flush == other.flush;
+}
+
+/// Full Dart DTO for MenteDB's unified process_turn pipeline.
+class ProcessTurnResult {
+  final List<ProcessTurnContextItem> context;
+  final String contextText;
+  final int stored;
+  final List<String> storedIds;
+  final List<ProcessTurnStoredMemory> storedMemories;
+  final String? episodicId;
+  final List<ProcessTurnPainWarning> painWarnings;
+  final bool cacheHit;
+  final int inferenceActions;
+  final List<ProcessTurnDetectedAction> detectedActions;
+  final List<ProcessTurnProactiveRecall> proactiveRecalls;
+  final String? correctionId;
+  final double sentiment;
+  final int phantomCount;
+  final int contradictionCount;
+  final List<String> predictedTopics;
+  final int factsExtracted;
+  final int edgesCreated;
+  final bool enrichmentPending;
+  final List<String> deltaAdded;
+  final List<String> deltaRemoved;
+  final int memoryCount;
+
+  const ProcessTurnResult({
+    required this.context,
+    required this.contextText,
+    required this.stored,
+    required this.storedIds,
+    required this.storedMemories,
+    this.episodicId,
+    required this.painWarnings,
+    required this.cacheHit,
+    required this.inferenceActions,
+    required this.detectedActions,
+    required this.proactiveRecalls,
+    this.correctionId,
+    required this.sentiment,
+    required this.phantomCount,
+    required this.contradictionCount,
+    required this.predictedTopics,
+    required this.factsExtracted,
+    required this.edgesCreated,
+    required this.enrichmentPending,
+    required this.deltaAdded,
+    required this.deltaRemoved,
+    required this.memoryCount,
+  });
+
+  @override
+  int get hashCode =>
+      context.hashCode ^
+      contextText.hashCode ^
+      stored.hashCode ^
+      storedIds.hashCode ^
+      storedMemories.hashCode ^
+      episodicId.hashCode ^
+      painWarnings.hashCode ^
+      cacheHit.hashCode ^
+      inferenceActions.hashCode ^
+      detectedActions.hashCode ^
+      proactiveRecalls.hashCode ^
+      correctionId.hashCode ^
+      sentiment.hashCode ^
+      phantomCount.hashCode ^
+      contradictionCount.hashCode ^
+      predictedTopics.hashCode ^
+      factsExtracted.hashCode ^
+      edgesCreated.hashCode ^
+      enrichmentPending.hashCode ^
+      deltaAdded.hashCode ^
+      deltaRemoved.hashCode ^
+      memoryCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProcessTurnResult &&
+          runtimeType == other.runtimeType &&
+          context == other.context &&
+          contextText == other.contextText &&
+          stored == other.stored &&
+          storedIds == other.storedIds &&
+          storedMemories == other.storedMemories &&
+          episodicId == other.episodicId &&
+          painWarnings == other.painWarnings &&
+          cacheHit == other.cacheHit &&
+          inferenceActions == other.inferenceActions &&
+          detectedActions == other.detectedActions &&
+          proactiveRecalls == other.proactiveRecalls &&
+          correctionId == other.correctionId &&
+          sentiment == other.sentiment &&
+          phantomCount == other.phantomCount &&
+          contradictionCount == other.contradictionCount &&
+          predictedTopics == other.predictedTopics &&
+          factsExtracted == other.factsExtracted &&
+          edgesCreated == other.edgesCreated &&
+          enrichmentPending == other.enrichmentPending &&
+          deltaAdded == other.deltaAdded &&
+          deltaRemoved == other.deltaRemoved &&
+          memoryCount == other.memoryCount;
+}
+
+/// A memory written during a process_turn call.
+class ProcessTurnStoredMemory {
+  final String id;
+  final String content;
+  final BridgeMemoryType memoryType;
+  final List<String> tags;
+  final double salience;
+  final double confidence;
+
+  const ProcessTurnStoredMemory({
+    required this.id,
+    required this.content,
+    required this.memoryType,
+    required this.tags,
+    required this.salience,
+    required this.confidence,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      content.hashCode ^
+      memoryType.hashCode ^
+      tags.hashCode ^
+      salience.hashCode ^
+      confidence.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProcessTurnStoredMemory &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          content == other.content &&
+          memoryType == other.memoryType &&
+          tags == other.tags &&
+          salience == other.salience &&
+          confidence == other.confidence;
 }
 
 /// Request used to recall memories for a chat prompt.

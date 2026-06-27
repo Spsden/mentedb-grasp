@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.2";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1869282923;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1720913295;
 
 // Section: executor
 
@@ -287,6 +287,42 @@ fn wire__crate__api__memory__open_database_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::memory::open_database(api_request)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__memory__process_turn_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "process_turn",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_request =
+                <crate::api::memory::ProcessTurnRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::memory::process_turn(api_request)?;
                         Ok(output_ok)
                     })(),
                 )
@@ -776,6 +812,74 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for Vec<crate::api::memory::ProcessTurnContextItem> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::memory::ProcessTurnContextItem>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::memory::ProcessTurnDetectedAction> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::memory::ProcessTurnDetectedAction>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::memory::ProcessTurnPainWarning> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::memory::ProcessTurnPainWarning>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::memory::ProcessTurnProactiveRecall> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::memory::ProcessTurnProactiveRecall>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::memory::ProcessTurnStoredMemory> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::memory::ProcessTurnStoredMemory>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for crate::api::memory::OpenDatabaseRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -827,6 +931,177 @@ impl SseDecode for Option<i64> {
         } else {
             return None;
         }
+    }
+}
+
+impl SseDecode for crate::api::memory::ProcessTurnContextItem {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_content = <String>::sse_decode(deserializer);
+        let mut var_score = <f32>::sse_decode(deserializer);
+        let mut var_memoryType = <crate::api::memory::BridgeMemoryType>::sse_decode(deserializer);
+        let mut var_tags = <Vec<String>>::sse_decode(deserializer);
+        let mut var_createdAtMicros = <i64>::sse_decode(deserializer);
+        let mut var_salience = <f32>::sse_decode(deserializer);
+        let mut var_confidence = <f32>::sse_decode(deserializer);
+        let mut var_isNew = <bool>::sse_decode(deserializer);
+        let mut var_fromCache = <bool>::sse_decode(deserializer);
+        let mut var_scope = <String>::sse_decode(deserializer);
+        return crate::api::memory::ProcessTurnContextItem {
+            id: var_id,
+            content: var_content,
+            score: var_score,
+            memory_type: var_memoryType,
+            tags: var_tags,
+            created_at_micros: var_createdAtMicros,
+            salience: var_salience,
+            confidence: var_confidence,
+            is_new: var_isNew,
+            from_cache: var_fromCache,
+            scope: var_scope,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::ProcessTurnDetectedAction {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_actionType = <String>::sse_decode(deserializer);
+        let mut var_detail = <String>::sse_decode(deserializer);
+        return crate::api::memory::ProcessTurnDetectedAction {
+            action_type: var_actionType,
+            detail: var_detail,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::ProcessTurnPainWarning {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_signalId = <String>::sse_decode(deserializer);
+        let mut var_intensity = <f32>::sse_decode(deserializer);
+        let mut var_description = <String>::sse_decode(deserializer);
+        return crate::api::memory::ProcessTurnPainWarning {
+            signal_id: var_signalId,
+            intensity: var_intensity,
+            description: var_description,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::ProcessTurnProactiveRecall {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_memoryId = <String>::sse_decode(deserializer);
+        let mut var_content = <String>::sse_decode(deserializer);
+        let mut var_relevance = <f32>::sse_decode(deserializer);
+        let mut var_actionType = <String>::sse_decode(deserializer);
+        return crate::api::memory::ProcessTurnProactiveRecall {
+            memory_id: var_memoryId,
+            content: var_content,
+            relevance: var_relevance,
+            action_type: var_actionType,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::ProcessTurnRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_handle = <u32>::sse_decode(deserializer);
+        let mut var_userMessage = <String>::sse_decode(deserializer);
+        let mut var_assistantResponse = <Option<String>>::sse_decode(deserializer);
+        let mut var_turnId = <u32>::sse_decode(deserializer);
+        let mut var_projectContext = <Option<String>>::sse_decode(deserializer);
+        let mut var_agentId = <Option<String>>::sse_decode(deserializer);
+        let mut var_flush = <bool>::sse_decode(deserializer);
+        return crate::api::memory::ProcessTurnRequest {
+            handle: var_handle,
+            user_message: var_userMessage,
+            assistant_response: var_assistantResponse,
+            turn_id: var_turnId,
+            project_context: var_projectContext,
+            agent_id: var_agentId,
+            flush: var_flush,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::ProcessTurnResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_context =
+            <Vec<crate::api::memory::ProcessTurnContextItem>>::sse_decode(deserializer);
+        let mut var_contextText = <String>::sse_decode(deserializer);
+        let mut var_stored = <u32>::sse_decode(deserializer);
+        let mut var_storedIds = <Vec<String>>::sse_decode(deserializer);
+        let mut var_storedMemories =
+            <Vec<crate::api::memory::ProcessTurnStoredMemory>>::sse_decode(deserializer);
+        let mut var_episodicId = <Option<String>>::sse_decode(deserializer);
+        let mut var_painWarnings =
+            <Vec<crate::api::memory::ProcessTurnPainWarning>>::sse_decode(deserializer);
+        let mut var_cacheHit = <bool>::sse_decode(deserializer);
+        let mut var_inferenceActions = <u32>::sse_decode(deserializer);
+        let mut var_detectedActions =
+            <Vec<crate::api::memory::ProcessTurnDetectedAction>>::sse_decode(deserializer);
+        let mut var_proactiveRecalls =
+            <Vec<crate::api::memory::ProcessTurnProactiveRecall>>::sse_decode(deserializer);
+        let mut var_correctionId = <Option<String>>::sse_decode(deserializer);
+        let mut var_sentiment = <f32>::sse_decode(deserializer);
+        let mut var_phantomCount = <u32>::sse_decode(deserializer);
+        let mut var_contradictionCount = <u32>::sse_decode(deserializer);
+        let mut var_predictedTopics = <Vec<String>>::sse_decode(deserializer);
+        let mut var_factsExtracted = <u32>::sse_decode(deserializer);
+        let mut var_edgesCreated = <u32>::sse_decode(deserializer);
+        let mut var_enrichmentPending = <bool>::sse_decode(deserializer);
+        let mut var_deltaAdded = <Vec<String>>::sse_decode(deserializer);
+        let mut var_deltaRemoved = <Vec<String>>::sse_decode(deserializer);
+        let mut var_memoryCount = <u32>::sse_decode(deserializer);
+        return crate::api::memory::ProcessTurnResult {
+            context: var_context,
+            context_text: var_contextText,
+            stored: var_stored,
+            stored_ids: var_storedIds,
+            stored_memories: var_storedMemories,
+            episodic_id: var_episodicId,
+            pain_warnings: var_painWarnings,
+            cache_hit: var_cacheHit,
+            inference_actions: var_inferenceActions,
+            detected_actions: var_detectedActions,
+            proactive_recalls: var_proactiveRecalls,
+            correction_id: var_correctionId,
+            sentiment: var_sentiment,
+            phantom_count: var_phantomCount,
+            contradiction_count: var_contradictionCount,
+            predicted_topics: var_predictedTopics,
+            facts_extracted: var_factsExtracted,
+            edges_created: var_edgesCreated,
+            enrichment_pending: var_enrichmentPending,
+            delta_added: var_deltaAdded,
+            delta_removed: var_deltaRemoved,
+            memory_count: var_memoryCount,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::ProcessTurnStoredMemory {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_content = <String>::sse_decode(deserializer);
+        let mut var_memoryType = <crate::api::memory::BridgeMemoryType>::sse_decode(deserializer);
+        let mut var_tags = <Vec<String>>::sse_decode(deserializer);
+        let mut var_salience = <f32>::sse_decode(deserializer);
+        let mut var_confidence = <f32>::sse_decode(deserializer);
+        return crate::api::memory::ProcessTurnStoredMemory {
+            id: var_id,
+            content: var_content,
+            memory_type: var_memoryType,
+            tags: var_tags,
+            salience: var_salience,
+            confidence: var_confidence,
+        };
     }
 }
 
@@ -964,13 +1239,14 @@ fn pde_ffi_dispatcher_primary_impl(
         5 => wire__crate__api__memory__init_app_impl(port, ptr, rust_vec_len, data_len),
         6 => wire__crate__api__memory__memory_count_impl(port, ptr, rust_vec_len, data_len),
         7 => wire__crate__api__memory__open_database_impl(port, ptr, rust_vec_len, data_len),
-        8 => {
+        8 => wire__crate__api__memory__process_turn_impl(port, ptr, rust_vec_len, data_len),
+        9 => {
             wire__crate__api__memory__recall_memory_context_impl(port, ptr, rust_vec_len, data_len)
         }
-        9 => {
+        10 => {
             wire__crate__api__memory__run_sleep_maintenance_impl(port, ptr, rust_vec_len, data_len)
         }
-        10 => wire__crate__api__memory__store_conversation_turn_impl(
+        11 => wire__crate__api__memory__store_conversation_turn_impl(
             port,
             ptr,
             rust_vec_len,
@@ -1330,6 +1606,194 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::OpenDatabaseResult>
     for crate::api::memory::OpenDatabaseResult
 {
     fn into_into_dart(self) -> crate::api::memory::OpenDatabaseResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ProcessTurnContextItem {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.content.into_into_dart().into_dart(),
+            self.score.into_into_dart().into_dart(),
+            self.memory_type.into_into_dart().into_dart(),
+            self.tags.into_into_dart().into_dart(),
+            self.created_at_micros.into_into_dart().into_dart(),
+            self.salience.into_into_dart().into_dart(),
+            self.confidence.into_into_dart().into_dart(),
+            self.is_new.into_into_dart().into_dart(),
+            self.from_cache.into_into_dart().into_dart(),
+            self.scope.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ProcessTurnContextItem
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ProcessTurnContextItem>
+    for crate::api::memory::ProcessTurnContextItem
+{
+    fn into_into_dart(self) -> crate::api::memory::ProcessTurnContextItem {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ProcessTurnDetectedAction {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.action_type.into_into_dart().into_dart(),
+            self.detail.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ProcessTurnDetectedAction
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ProcessTurnDetectedAction>
+    for crate::api::memory::ProcessTurnDetectedAction
+{
+    fn into_into_dart(self) -> crate::api::memory::ProcessTurnDetectedAction {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ProcessTurnPainWarning {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.signal_id.into_into_dart().into_dart(),
+            self.intensity.into_into_dart().into_dart(),
+            self.description.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ProcessTurnPainWarning
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ProcessTurnPainWarning>
+    for crate::api::memory::ProcessTurnPainWarning
+{
+    fn into_into_dart(self) -> crate::api::memory::ProcessTurnPainWarning {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ProcessTurnProactiveRecall {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.memory_id.into_into_dart().into_dart(),
+            self.content.into_into_dart().into_dart(),
+            self.relevance.into_into_dart().into_dart(),
+            self.action_type.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ProcessTurnProactiveRecall
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ProcessTurnProactiveRecall>
+    for crate::api::memory::ProcessTurnProactiveRecall
+{
+    fn into_into_dart(self) -> crate::api::memory::ProcessTurnProactiveRecall {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ProcessTurnRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.handle.into_into_dart().into_dart(),
+            self.user_message.into_into_dart().into_dart(),
+            self.assistant_response.into_into_dart().into_dart(),
+            self.turn_id.into_into_dart().into_dart(),
+            self.project_context.into_into_dart().into_dart(),
+            self.agent_id.into_into_dart().into_dart(),
+            self.flush.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ProcessTurnRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ProcessTurnRequest>
+    for crate::api::memory::ProcessTurnRequest
+{
+    fn into_into_dart(self) -> crate::api::memory::ProcessTurnRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ProcessTurnResult {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.context.into_into_dart().into_dart(),
+            self.context_text.into_into_dart().into_dart(),
+            self.stored.into_into_dart().into_dart(),
+            self.stored_ids.into_into_dart().into_dart(),
+            self.stored_memories.into_into_dart().into_dart(),
+            self.episodic_id.into_into_dart().into_dart(),
+            self.pain_warnings.into_into_dart().into_dart(),
+            self.cache_hit.into_into_dart().into_dart(),
+            self.inference_actions.into_into_dart().into_dart(),
+            self.detected_actions.into_into_dart().into_dart(),
+            self.proactive_recalls.into_into_dart().into_dart(),
+            self.correction_id.into_into_dart().into_dart(),
+            self.sentiment.into_into_dart().into_dart(),
+            self.phantom_count.into_into_dart().into_dart(),
+            self.contradiction_count.into_into_dart().into_dart(),
+            self.predicted_topics.into_into_dart().into_dart(),
+            self.facts_extracted.into_into_dart().into_dart(),
+            self.edges_created.into_into_dart().into_dart(),
+            self.enrichment_pending.into_into_dart().into_dart(),
+            self.delta_added.into_into_dart().into_dart(),
+            self.delta_removed.into_into_dart().into_dart(),
+            self.memory_count.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ProcessTurnResult
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ProcessTurnResult>
+    for crate::api::memory::ProcessTurnResult
+{
+    fn into_into_dart(self) -> crate::api::memory::ProcessTurnResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ProcessTurnStoredMemory {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.content.into_into_dart().into_dart(),
+            self.memory_type.into_into_dart().into_dart(),
+            self.tags.into_into_dart().into_dart(),
+            self.salience.into_into_dart().into_dart(),
+            self.confidence.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ProcessTurnStoredMemory
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ProcessTurnStoredMemory>
+    for crate::api::memory::ProcessTurnStoredMemory
+{
+    fn into_into_dart(self) -> crate::api::memory::ProcessTurnStoredMemory {
         self
     }
 }
@@ -1730,6 +2194,56 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for Vec<crate::api::memory::ProcessTurnContextItem> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::memory::ProcessTurnContextItem>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::memory::ProcessTurnDetectedAction> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::memory::ProcessTurnDetectedAction>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::memory::ProcessTurnPainWarning> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::memory::ProcessTurnPainWarning>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::memory::ProcessTurnProactiveRecall> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::memory::ProcessTurnProactiveRecall>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::memory::ProcessTurnStoredMemory> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::memory::ProcessTurnStoredMemory>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for crate::api::memory::OpenDatabaseRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1767,6 +2281,115 @@ impl SseEncode for Option<i64> {
         if let Some(value) = self {
             <i64>::sse_encode(value, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::api::memory::ProcessTurnContextItem {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.content, serializer);
+        <f32>::sse_encode(self.score, serializer);
+        <crate::api::memory::BridgeMemoryType>::sse_encode(self.memory_type, serializer);
+        <Vec<String>>::sse_encode(self.tags, serializer);
+        <i64>::sse_encode(self.created_at_micros, serializer);
+        <f32>::sse_encode(self.salience, serializer);
+        <f32>::sse_encode(self.confidence, serializer);
+        <bool>::sse_encode(self.is_new, serializer);
+        <bool>::sse_encode(self.from_cache, serializer);
+        <String>::sse_encode(self.scope, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::ProcessTurnDetectedAction {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.action_type, serializer);
+        <String>::sse_encode(self.detail, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::ProcessTurnPainWarning {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.signal_id, serializer);
+        <f32>::sse_encode(self.intensity, serializer);
+        <String>::sse_encode(self.description, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::ProcessTurnProactiveRecall {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.memory_id, serializer);
+        <String>::sse_encode(self.content, serializer);
+        <f32>::sse_encode(self.relevance, serializer);
+        <String>::sse_encode(self.action_type, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::ProcessTurnRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.handle, serializer);
+        <String>::sse_encode(self.user_message, serializer);
+        <Option<String>>::sse_encode(self.assistant_response, serializer);
+        <u32>::sse_encode(self.turn_id, serializer);
+        <Option<String>>::sse_encode(self.project_context, serializer);
+        <Option<String>>::sse_encode(self.agent_id, serializer);
+        <bool>::sse_encode(self.flush, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::ProcessTurnResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::memory::ProcessTurnContextItem>>::sse_encode(self.context, serializer);
+        <String>::sse_encode(self.context_text, serializer);
+        <u32>::sse_encode(self.stored, serializer);
+        <Vec<String>>::sse_encode(self.stored_ids, serializer);
+        <Vec<crate::api::memory::ProcessTurnStoredMemory>>::sse_encode(
+            self.stored_memories,
+            serializer,
+        );
+        <Option<String>>::sse_encode(self.episodic_id, serializer);
+        <Vec<crate::api::memory::ProcessTurnPainWarning>>::sse_encode(
+            self.pain_warnings,
+            serializer,
+        );
+        <bool>::sse_encode(self.cache_hit, serializer);
+        <u32>::sse_encode(self.inference_actions, serializer);
+        <Vec<crate::api::memory::ProcessTurnDetectedAction>>::sse_encode(
+            self.detected_actions,
+            serializer,
+        );
+        <Vec<crate::api::memory::ProcessTurnProactiveRecall>>::sse_encode(
+            self.proactive_recalls,
+            serializer,
+        );
+        <Option<String>>::sse_encode(self.correction_id, serializer);
+        <f32>::sse_encode(self.sentiment, serializer);
+        <u32>::sse_encode(self.phantom_count, serializer);
+        <u32>::sse_encode(self.contradiction_count, serializer);
+        <Vec<String>>::sse_encode(self.predicted_topics, serializer);
+        <u32>::sse_encode(self.facts_extracted, serializer);
+        <u32>::sse_encode(self.edges_created, serializer);
+        <bool>::sse_encode(self.enrichment_pending, serializer);
+        <Vec<String>>::sse_encode(self.delta_added, serializer);
+        <Vec<String>>::sse_encode(self.delta_removed, serializer);
+        <u32>::sse_encode(self.memory_count, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::ProcessTurnStoredMemory {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.content, serializer);
+        <crate::api::memory::BridgeMemoryType>::sse_encode(self.memory_type, serializer);
+        <Vec<String>>::sse_encode(self.tags, serializer);
+        <f32>::sse_encode(self.salience, serializer);
+        <f32>::sse_encode(self.confidence, serializer);
     }
 }
 

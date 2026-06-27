@@ -35,8 +35,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   /// Initialize flutter_rust_bridge in mock mode.
   /// No libraries for FFI are loaded.
-  static void initMock({required RustLibApi api}) {
-    instance.initMockImpl(api: api);
+  static void initMock({
+    required RustLibApi api,
+  }) {
+    instance.initMockImpl(
+      api: api,
+    );
   }
 
   /// Dispose flutter_rust_bridge
@@ -66,15 +70,15 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0-beta.2';
 
   @override
-  int get rustContentHash => -1869282923;
+  int get rustContentHash => 1720913295;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
-        stem: 'mentedb_flutter_bridge',
-        ioDirectory: 'rust/target/release/',
-        webPrefix: 'pkg/',
-        wasmBindgenName: 'wasm_bindgen',
-      );
+    stem: 'mentedb_flutter_bridge',
+    ioDirectory: 'rust/target/release/',
+    webPrefix: 'pkg/',
+    wasmBindgenName: 'wasm_bindgen',
+  );
 }
 
 abstract class RustLibApi extends BaseApi {
@@ -82,33 +86,30 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiMemoryFlushDatabase({required int handle});
 
-  Future<BridgeGraphProjection> crateApiMemoryGraphProjection({
-    required GraphProjectionRequest request,
-  });
+  Future<BridgeGraphProjection> crateApiMemoryGraphProjection(
+      {required GraphProjectionRequest request});
 
-  Future<IngestMemoryBankResult> crateApiMemoryIngestMemoryBank({
-    required IngestMemoryBankRequest request,
-  });
+  Future<IngestMemoryBankResult> crateApiMemoryIngestMemoryBank(
+      {required IngestMemoryBankRequest request});
 
   Future<void> crateApiMemoryInitApp();
 
   Future<int> crateApiMemoryMemoryCount({required int handle});
 
-  Future<OpenDatabaseResult> crateApiMemoryOpenDatabase({
-    required OpenDatabaseRequest request,
-  });
+  Future<OpenDatabaseResult> crateApiMemoryOpenDatabase(
+      {required OpenDatabaseRequest request});
 
-  Future<RecallMemoryContextResult> crateApiMemoryRecallMemoryContext({
-    required RecallMemoryContextRequest request,
-  });
+  Future<ProcessTurnResult> crateApiMemoryProcessTurn(
+      {required ProcessTurnRequest request});
 
-  Future<BridgeSleepMaintenanceResult> crateApiMemoryRunSleepMaintenance({
-    required RunSleepMaintenanceRequest request,
-  });
+  Future<RecallMemoryContextResult> crateApiMemoryRecallMemoryContext(
+      {required RecallMemoryContextRequest request});
 
-  Future<StoreConversationTurnResult> crateApiMemoryStoreConversationTurn({
-    required StoreConversationTurnRequest request,
-  });
+  Future<BridgeSleepMaintenanceResult> crateApiMemoryRunSleepMaintenance(
+      {required RunSleepMaintenanceRequest request});
+
+  Future<StoreConversationTurnResult> crateApiMemoryStoreConversationTurn(
+      {required StoreConversationTurnRequest request});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -121,118 +122,98 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<void> crateApiMemoryCloseDatabase({required int handle}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_u_32(handle, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 1,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryCloseDatabaseConstMeta,
-        argValues: [handle],
-        apiImpl: this,
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_u_32(handle, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 1, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryCloseDatabaseConstMeta,
+      argValues: [handle],
+      apiImpl: this,
+    ));
   }
 
   TaskConstMeta get kCrateApiMemoryCloseDatabaseConstMeta =>
-      const TaskConstMeta(debugName: "close_database", argNames: ["handle"]);
+      const TaskConstMeta(
+        debugName: "close_database",
+        argNames: ["handle"],
+      );
 
   @override
   Future<void> crateApiMemoryFlushDatabase({required int handle}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_u_32(handle, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 2,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryFlushDatabaseConstMeta,
-        argValues: [handle],
-        apiImpl: this,
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_u_32(handle, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 2, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryFlushDatabaseConstMeta,
+      argValues: [handle],
+      apiImpl: this,
+    ));
   }
 
   TaskConstMeta get kCrateApiMemoryFlushDatabaseConstMeta =>
-      const TaskConstMeta(debugName: "flush_database", argNames: ["handle"]);
+      const TaskConstMeta(
+        debugName: "flush_database",
+        argNames: ["handle"],
+      );
 
   @override
-  Future<BridgeGraphProjection> crateApiMemoryGraphProjection({
-    required GraphProjectionRequest request,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_graph_projection_request(request, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 3,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_bridge_graph_projection,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryGraphProjectionConstMeta,
-        argValues: [request],
-        apiImpl: this,
+  Future<BridgeGraphProjection> crateApiMemoryGraphProjection(
+      {required GraphProjectionRequest request}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_graph_projection_request(request, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 3, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bridge_graph_projection,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryGraphProjectionConstMeta,
+      argValues: [request],
+      apiImpl: this,
+    ));
   }
 
   TaskConstMeta get kCrateApiMemoryGraphProjectionConstMeta =>
-      const TaskConstMeta(debugName: "graph_projection", argNames: ["request"]);
+      const TaskConstMeta(
+        debugName: "graph_projection",
+        argNames: ["request"],
+      );
 
   @override
-  Future<IngestMemoryBankResult> crateApiMemoryIngestMemoryBank({
-    required IngestMemoryBankRequest request,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_ingest_memory_bank_request(
-            request,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 4,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_ingest_memory_bank_result,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryIngestMemoryBankConstMeta,
-        argValues: [request],
-        apiImpl: this,
+  Future<IngestMemoryBankResult> crateApiMemoryIngestMemoryBank(
+      {required IngestMemoryBankRequest request}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_ingest_memory_bank_request(request, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 4, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ingest_memory_bank_result,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryIngestMemoryBankConstMeta,
+      argValues: [request],
+      apiImpl: this,
+    ));
   }
 
   TaskConstMeta get kCrateApiMemoryIngestMemoryBankConstMeta =>
@@ -243,117 +224,120 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<void> crateApiMemoryInitApp() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 5,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiMemoryInitAppConstMeta,
-        argValues: [],
-        apiImpl: this,
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 5, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
       ),
-    );
+      constMeta: kCrateApiMemoryInitAppConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
   }
 
-  TaskConstMeta get kCrateApiMemoryInitAppConstMeta =>
-      const TaskConstMeta(debugName: "init_app", argNames: []);
+  TaskConstMeta get kCrateApiMemoryInitAppConstMeta => const TaskConstMeta(
+        debugName: "init_app",
+        argNames: [],
+      );
 
   @override
   Future<int> crateApiMemoryMemoryCount({required int handle}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_u_32(handle, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 6,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_u_32,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryMemoryCountConstMeta,
-        argValues: [handle],
-        apiImpl: this,
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_u_32(handle, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 6, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_u_32,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryMemoryCountConstMeta,
+      argValues: [handle],
+      apiImpl: this,
+    ));
   }
 
-  TaskConstMeta get kCrateApiMemoryMemoryCountConstMeta =>
-      const TaskConstMeta(debugName: "memory_count", argNames: ["handle"]);
+  TaskConstMeta get kCrateApiMemoryMemoryCountConstMeta => const TaskConstMeta(
+        debugName: "memory_count",
+        argNames: ["handle"],
+      );
 
   @override
-  Future<OpenDatabaseResult> crateApiMemoryOpenDatabase({
-    required OpenDatabaseRequest request,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_open_database_request(request, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 7,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_open_database_result,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryOpenDatabaseConstMeta,
-        argValues: [request],
-        apiImpl: this,
+  Future<OpenDatabaseResult> crateApiMemoryOpenDatabase(
+      {required OpenDatabaseRequest request}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_open_database_request(request, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 7, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_open_database_result,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryOpenDatabaseConstMeta,
+      argValues: [request],
+      apiImpl: this,
+    ));
   }
 
-  TaskConstMeta get kCrateApiMemoryOpenDatabaseConstMeta =>
-      const TaskConstMeta(debugName: "open_database", argNames: ["request"]);
+  TaskConstMeta get kCrateApiMemoryOpenDatabaseConstMeta => const TaskConstMeta(
+        debugName: "open_database",
+        argNames: ["request"],
+      );
 
   @override
-  Future<RecallMemoryContextResult> crateApiMemoryRecallMemoryContext({
-    required RecallMemoryContextRequest request,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_recall_memory_context_request(
-            request,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 8,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_recall_memory_context_result,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryRecallMemoryContextConstMeta,
-        argValues: [request],
-        apiImpl: this,
+  Future<ProcessTurnResult> crateApiMemoryProcessTurn(
+      {required ProcessTurnRequest request}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_process_turn_request(request, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 8, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_process_turn_result,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryProcessTurnConstMeta,
+      argValues: [request],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiMemoryProcessTurnConstMeta => const TaskConstMeta(
+        debugName: "process_turn",
+        argNames: ["request"],
+      );
+
+  @override
+  Future<RecallMemoryContextResult> crateApiMemoryRecallMemoryContext(
+      {required RecallMemoryContextRequest request}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_recall_memory_context_request(
+            request, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 9, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_recall_memory_context_result,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiMemoryRecallMemoryContextConstMeta,
+      argValues: [request],
+      apiImpl: this,
+    ));
   }
 
   TaskConstMeta get kCrateApiMemoryRecallMemoryContextConstMeta =>
@@ -363,33 +347,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<BridgeSleepMaintenanceResult> crateApiMemoryRunSleepMaintenance({
-    required RunSleepMaintenanceRequest request,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_run_sleep_maintenance_request(
-            request,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 9,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_bridge_sleep_maintenance_result,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryRunSleepMaintenanceConstMeta,
-        argValues: [request],
-        apiImpl: this,
+  Future<BridgeSleepMaintenanceResult> crateApiMemoryRunSleepMaintenance(
+      {required RunSleepMaintenanceRequest request}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_run_sleep_maintenance_request(
+            request, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 10, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bridge_sleep_maintenance_result,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryRunSleepMaintenanceConstMeta,
+      argValues: [request],
+      apiImpl: this,
+    ));
   }
 
   TaskConstMeta get kCrateApiMemoryRunSleepMaintenanceConstMeta =>
@@ -399,33 +374,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<StoreConversationTurnResult> crateApiMemoryStoreConversationTurn({
-    required StoreConversationTurnRequest request,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_store_conversation_turn_request(
-            request,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 10,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_store_conversation_turn_result,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiMemoryStoreConversationTurnConstMeta,
-        argValues: [request],
-        apiImpl: this,
+  Future<StoreConversationTurnResult> crateApiMemoryStoreConversationTurn(
+      {required StoreConversationTurnRequest request}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_box_autoadd_store_conversation_turn_request(
+            request, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 11, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_store_conversation_turn_result,
+        decodeErrorData: sse_decode_AnyhowException,
       ),
-    );
+      constMeta: kCrateApiMemoryStoreConversationTurnConstMeta,
+      argValues: [request],
+      apiImpl: this,
+    ));
   }
 
   TaskConstMeta get kCrateApiMemoryStoreConversationTurnConstMeta =>
@@ -454,8 +420,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   GraphProjectionRequest dco_decode_box_autoadd_graph_projection_request(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_graph_projection_request(raw);
   }
@@ -468,37 +433,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   IngestMemoryBankRequest dco_decode_box_autoadd_ingest_memory_bank_request(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_ingest_memory_bank_request(raw);
   }
 
   @protected
   OpenDatabaseRequest dco_decode_box_autoadd_open_database_request(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_open_database_request(raw);
   }
 
   @protected
+  ProcessTurnRequest dco_decode_box_autoadd_process_turn_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_process_turn_request(raw);
+  }
+
+  @protected
   RecallMemoryContextRequest
-  dco_decode_box_autoadd_recall_memory_context_request(dynamic raw) {
+      dco_decode_box_autoadd_recall_memory_context_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_recall_memory_context_request(raw);
   }
 
   @protected
   RunSleepMaintenanceRequest
-  dco_decode_box_autoadd_run_sleep_maintenance_request(dynamic raw) {
+      dco_decode_box_autoadd_run_sleep_maintenance_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_run_sleep_maintenance_request(raw);
   }
 
   @protected
   StoreConversationTurnRequest
-  dco_decode_box_autoadd_store_conversation_turn_request(dynamic raw) {
+      dco_decode_box_autoadd_store_conversation_turn_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_store_conversation_turn_request(raw);
   }
@@ -525,8 +494,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   BridgeGraphProjectionEdge dco_decode_bridge_graph_projection_edge(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 7)
@@ -544,8 +512,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   BridgeGraphProjectionNode dco_decode_bridge_graph_projection_node(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 11)
@@ -591,8 +558,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   BridgeSleepMaintenanceIssue dco_decode_bridge_sleep_maintenance_issue(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
@@ -606,8 +572,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   BridgeSleepMaintenanceResult dco_decode_bridge_sleep_maintenance_result(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 18)
@@ -709,8 +674,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeGraphProjectionEdge> dco_decode_list_bridge_graph_projection_edge(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>)
         .map(dco_decode_bridge_graph_projection_edge)
@@ -719,8 +683,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeGraphProjectionNode> dco_decode_list_bridge_graph_projection_node(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>)
         .map(dco_decode_bridge_graph_projection_node)
@@ -729,8 +692,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeRecalledMemory> dco_decode_list_bridge_recalled_memory(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>)
         .map(dco_decode_bridge_recalled_memory)
@@ -739,7 +701,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeSleepMaintenanceIssue>
-  dco_decode_list_bridge_sleep_maintenance_issue(dynamic raw) {
+      dco_decode_list_bridge_sleep_maintenance_issue(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>)
         .map(dco_decode_bridge_sleep_maintenance_issue)
@@ -750,6 +712,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<ProcessTurnContextItem> dco_decode_list_process_turn_context_item(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_process_turn_context_item)
+        .toList();
+  }
+
+  @protected
+  List<ProcessTurnDetectedAction> dco_decode_list_process_turn_detected_action(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_process_turn_detected_action)
+        .toList();
+  }
+
+  @protected
+  List<ProcessTurnPainWarning> dco_decode_list_process_turn_pain_warning(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_process_turn_pain_warning)
+        .toList();
+  }
+
+  @protected
+  List<ProcessTurnProactiveRecall>
+      dco_decode_list_process_turn_proactive_recall(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_process_turn_proactive_recall)
+        .toList();
+  }
+
+  @protected
+  List<ProcessTurnStoredMemory> dco_decode_list_process_turn_stored_memory(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_process_turn_stored_memory)
+        .toList();
   }
 
   @protected
@@ -793,9 +800,135 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ProcessTurnContextItem dco_decode_process_turn_context_item(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 11)
+      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+    return ProcessTurnContextItem(
+      id: dco_decode_String(arr[0]),
+      content: dco_decode_String(arr[1]),
+      score: dco_decode_f_32(arr[2]),
+      memoryType: dco_decode_bridge_memory_type(arr[3]),
+      tags: dco_decode_list_String(arr[4]),
+      createdAtMicros: dco_decode_i_64(arr[5]),
+      salience: dco_decode_f_32(arr[6]),
+      confidence: dco_decode_f_32(arr[7]),
+      isNew: dco_decode_bool(arr[8]),
+      fromCache: dco_decode_bool(arr[9]),
+      scope: dco_decode_String(arr[10]),
+    );
+  }
+
+  @protected
+  ProcessTurnDetectedAction dco_decode_process_turn_detected_action(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return ProcessTurnDetectedAction(
+      actionType: dco_decode_String(arr[0]),
+      detail: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  ProcessTurnPainWarning dco_decode_process_turn_pain_warning(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return ProcessTurnPainWarning(
+      signalId: dco_decode_String(arr[0]),
+      intensity: dco_decode_f_32(arr[1]),
+      description: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
+  ProcessTurnProactiveRecall dco_decode_process_turn_proactive_recall(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return ProcessTurnProactiveRecall(
+      memoryId: dco_decode_String(arr[0]),
+      content: dco_decode_String(arr[1]),
+      relevance: dco_decode_f_32(arr[2]),
+      actionType: dco_decode_String(arr[3]),
+    );
+  }
+
+  @protected
+  ProcessTurnRequest dco_decode_process_turn_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return ProcessTurnRequest(
+      handle: dco_decode_u_32(arr[0]),
+      userMessage: dco_decode_String(arr[1]),
+      assistantResponse: dco_decode_opt_String(arr[2]),
+      turnId: dco_decode_u_32(arr[3]),
+      projectContext: dco_decode_opt_String(arr[4]),
+      agentId: dco_decode_opt_String(arr[5]),
+      flush: dco_decode_bool(arr[6]),
+    );
+  }
+
+  @protected
+  ProcessTurnResult dco_decode_process_turn_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 22)
+      throw Exception('unexpected arr length: expect 22 but see ${arr.length}');
+    return ProcessTurnResult(
+      context: dco_decode_list_process_turn_context_item(arr[0]),
+      contextText: dco_decode_String(arr[1]),
+      stored: dco_decode_u_32(arr[2]),
+      storedIds: dco_decode_list_String(arr[3]),
+      storedMemories: dco_decode_list_process_turn_stored_memory(arr[4]),
+      episodicId: dco_decode_opt_String(arr[5]),
+      painWarnings: dco_decode_list_process_turn_pain_warning(arr[6]),
+      cacheHit: dco_decode_bool(arr[7]),
+      inferenceActions: dco_decode_u_32(arr[8]),
+      detectedActions: dco_decode_list_process_turn_detected_action(arr[9]),
+      proactiveRecalls: dco_decode_list_process_turn_proactive_recall(arr[10]),
+      correctionId: dco_decode_opt_String(arr[11]),
+      sentiment: dco_decode_f_32(arr[12]),
+      phantomCount: dco_decode_u_32(arr[13]),
+      contradictionCount: dco_decode_u_32(arr[14]),
+      predictedTopics: dco_decode_list_String(arr[15]),
+      factsExtracted: dco_decode_u_32(arr[16]),
+      edgesCreated: dco_decode_u_32(arr[17]),
+      enrichmentPending: dco_decode_bool(arr[18]),
+      deltaAdded: dco_decode_list_String(arr[19]),
+      deltaRemoved: dco_decode_list_String(arr[20]),
+      memoryCount: dco_decode_u_32(arr[21]),
+    );
+  }
+
+  @protected
+  ProcessTurnStoredMemory dco_decode_process_turn_stored_memory(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return ProcessTurnStoredMemory(
+      id: dco_decode_String(arr[0]),
+      content: dco_decode_String(arr[1]),
+      memoryType: dco_decode_bridge_memory_type(arr[2]),
+      tags: dco_decode_list_String(arr[3]),
+      salience: dco_decode_f_32(arr[4]),
+      confidence: dco_decode_f_32(arr[5]),
+    );
+  }
+
+  @protected
   RecallMemoryContextRequest dco_decode_recall_memory_context_request(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
@@ -811,8 +944,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RecallMemoryContextResult dco_decode_recall_memory_context_result(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
@@ -826,8 +958,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RunSleepMaintenanceRequest dco_decode_run_sleep_maintenance_request(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 10)
@@ -848,8 +979,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   StoreConversationTurnRequest dco_decode_store_conversation_turn_request(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 7)
@@ -867,8 +997,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   StoreConversationTurnResult dco_decode_store_conversation_turn_result(
-    dynamic raw,
-  ) {
+      dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
@@ -921,8 +1050,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   GraphProjectionRequest sse_decode_box_autoadd_graph_projection_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_graph_projection_request(deserializer));
   }
@@ -935,43 +1063,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   IngestMemoryBankRequest sse_decode_box_autoadd_ingest_memory_bank_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_ingest_memory_bank_request(deserializer));
   }
 
   @protected
   OpenDatabaseRequest sse_decode_box_autoadd_open_database_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_open_database_request(deserializer));
   }
 
   @protected
+  ProcessTurnRequest sse_decode_box_autoadd_process_turn_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_process_turn_request(deserializer));
+  }
+
+  @protected
   RecallMemoryContextRequest
-  sse_decode_box_autoadd_recall_memory_context_request(
-    SseDeserializer deserializer,
-  ) {
+      sse_decode_box_autoadd_recall_memory_context_request(
+          SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_recall_memory_context_request(deserializer));
   }
 
   @protected
   RunSleepMaintenanceRequest
-  sse_decode_box_autoadd_run_sleep_maintenance_request(
-    SseDeserializer deserializer,
-  ) {
+      sse_decode_box_autoadd_run_sleep_maintenance_request(
+          SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_run_sleep_maintenance_request(deserializer));
   }
 
   @protected
   StoreConversationTurnRequest
-  sse_decode_box_autoadd_store_conversation_turn_request(
-    SseDeserializer deserializer,
-  ) {
+      sse_decode_box_autoadd_store_conversation_turn_request(
+          SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_store_conversation_turn_request(deserializer));
   }
@@ -985,25 +1115,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   BridgeGraphProjection sse_decode_bridge_graph_projection(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_nodes = sse_decode_list_bridge_graph_projection_node(deserializer);
     var var_edges = sse_decode_list_bridge_graph_projection_edge(deserializer);
     var var_availableNodes = sse_decode_u_32(deserializer);
     var var_truncated = sse_decode_bool(deserializer);
     return BridgeGraphProjection(
-      nodes: var_nodes,
-      edges: var_edges,
-      availableNodes: var_availableNodes,
-      truncated: var_truncated,
-    );
+        nodes: var_nodes,
+        edges: var_edges,
+        availableNodes: var_availableNodes,
+        truncated: var_truncated);
   }
 
   @protected
   BridgeGraphProjectionEdge sse_decode_bridge_graph_projection_edge(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_source = sse_decode_String(deserializer);
     var var_target = sse_decode_String(deserializer);
@@ -1013,20 +1140,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_createdAtMicros = sse_decode_i_64(deserializer);
     var var_validUntilMicros = sse_decode_opt_box_autoadd_i_64(deserializer);
     return BridgeGraphProjectionEdge(
-      source: var_source,
-      target: var_target,
-      edgeType: var_edgeType,
-      weight: var_weight,
-      label: var_label,
-      createdAtMicros: var_createdAtMicros,
-      validUntilMicros: var_validUntilMicros,
-    );
+        source: var_source,
+        target: var_target,
+        edgeType: var_edgeType,
+        weight: var_weight,
+        label: var_label,
+        createdAtMicros: var_createdAtMicros,
+        validUntilMicros: var_validUntilMicros);
   }
 
   @protected
   BridgeGraphProjectionNode sse_decode_bridge_graph_projection_node(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_label = sse_decode_String(deserializer);
@@ -1040,18 +1165,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_validUntilMicros = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_embeddingDim = sse_decode_u_32(deserializer);
     return BridgeGraphProjectionNode(
-      id: var_id,
-      label: var_label,
-      preview: var_preview,
-      memoryType: var_memoryType,
-      salience: var_salience,
-      confidence: var_confidence,
-      tags: var_tags,
-      createdAtMicros: var_createdAtMicros,
-      accessedAtMicros: var_accessedAtMicros,
-      validUntilMicros: var_validUntilMicros,
-      embeddingDim: var_embeddingDim,
-    );
+        id: var_id,
+        label: var_label,
+        preview: var_preview,
+        memoryType: var_memoryType,
+        salience: var_salience,
+        confidence: var_confidence,
+        tags: var_tags,
+        createdAtMicros: var_createdAtMicros,
+        accessedAtMicros: var_accessedAtMicros,
+        validUntilMicros: var_validUntilMicros,
+        embeddingDim: var_embeddingDim);
   }
 
   @protected
@@ -1063,8 +1187,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   BridgeRecalledMemory sse_decode_bridge_recalled_memory(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_content = sse_decode_String(deserializer);
@@ -1075,36 +1198,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_salience = sse_decode_f_32(deserializer);
     var var_confidence = sse_decode_f_32(deserializer);
     return BridgeRecalledMemory(
-      id: var_id,
-      content: var_content,
-      score: var_score,
-      memoryType: var_memoryType,
-      tags: var_tags,
-      createdAtMicros: var_createdAtMicros,
-      salience: var_salience,
-      confidence: var_confidence,
-    );
+        id: var_id,
+        content: var_content,
+        score: var_score,
+        memoryType: var_memoryType,
+        tags: var_tags,
+        createdAtMicros: var_createdAtMicros,
+        salience: var_salience,
+        confidence: var_confidence);
   }
 
   @protected
   BridgeSleepMaintenanceIssue sse_decode_bridge_sleep_maintenance_issue(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_stage = sse_decode_String(deserializer);
     var var_memoryId = sse_decode_opt_String(deserializer);
     var var_message = sse_decode_String(deserializer);
     return BridgeSleepMaintenanceIssue(
-      stage: var_stage,
-      memoryId: var_memoryId,
-      message: var_message,
-    );
+        stage: var_stage, memoryId: var_memoryId, message: var_message);
   }
 
   @protected
   BridgeSleepMaintenanceResult sse_decode_bridge_sleep_maintenance_result(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_leaseAcquired = sse_decode_bool(deserializer);
     var var_processedMemories = sse_decode_u_32(deserializer);
@@ -1123,29 +1240,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_entityPairsAmbiguous = sse_decode_u_32(deserializer);
     var var_enrichmentPending = sse_decode_bool(deserializer);
     var var_enrichmentCandidates = sse_decode_u_32(deserializer);
-    var var_issues = sse_decode_list_bridge_sleep_maintenance_issue(
-      deserializer,
-    );
+    var var_issues =
+        sse_decode_list_bridge_sleep_maintenance_issue(deserializer);
     return BridgeSleepMaintenanceResult(
-      leaseAcquired: var_leaseAcquired,
-      processedMemories: var_processedMemories,
-      decayUpdated: var_decayUpdated,
-      archivalEvaluated: var_archivalEvaluated,
-      archivalKeep: var_archivalKeep,
-      archivalArchive: var_archivalArchive,
-      archivalDelete: var_archivalDelete,
-      archivalConsolidate: var_archivalConsolidate,
-      archivalDeleteApplied: var_archivalDeleteApplied,
-      consolidationCandidates: var_consolidationCandidates,
-      consolidated: var_consolidated,
-      consolidatedMemoryIds: var_consolidatedMemoryIds,
-      entityPairsLinked: var_entityPairsLinked,
-      entityEdgesCreated: var_entityEdgesCreated,
-      entityPairsAmbiguous: var_entityPairsAmbiguous,
-      enrichmentPending: var_enrichmentPending,
-      enrichmentCandidates: var_enrichmentCandidates,
-      issues: var_issues,
-    );
+        leaseAcquired: var_leaseAcquired,
+        processedMemories: var_processedMemories,
+        decayUpdated: var_decayUpdated,
+        archivalEvaluated: var_archivalEvaluated,
+        archivalKeep: var_archivalKeep,
+        archivalArchive: var_archivalArchive,
+        archivalDelete: var_archivalDelete,
+        archivalConsolidate: var_archivalConsolidate,
+        archivalDeleteApplied: var_archivalDeleteApplied,
+        consolidationCandidates: var_consolidationCandidates,
+        consolidated: var_consolidated,
+        consolidatedMemoryIds: var_consolidatedMemoryIds,
+        entityPairsLinked: var_entityPairsLinked,
+        entityEdgesCreated: var_entityEdgesCreated,
+        entityPairsAmbiguous: var_entityPairsAmbiguous,
+        enrichmentPending: var_enrichmentPending,
+        enrichmentCandidates: var_enrichmentCandidates,
+        issues: var_issues);
   }
 
   @protected
@@ -1156,8 +1271,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   GraphProjectionRequest sse_decode_graph_projection_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_handle = sse_decode_u_32(deserializer);
     var var_center = sse_decode_opt_String(deserializer);
@@ -1168,15 +1282,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_includeInvalidated = sse_decode_bool(deserializer);
     var var_includeEdges = sse_decode_bool(deserializer);
     return GraphProjectionRequest(
-      handle: var_handle,
-      center: var_center,
-      depth: var_depth,
-      limit: var_limit,
-      labelChars: var_labelChars,
-      previewChars: var_previewChars,
-      includeInvalidated: var_includeInvalidated,
-      includeEdges: var_includeEdges,
-    );
+        handle: var_handle,
+        center: var_center,
+        depth: var_depth,
+        limit: var_limit,
+        labelChars: var_labelChars,
+        previewChars: var_previewChars,
+        includeInvalidated: var_includeInvalidated,
+        includeEdges: var_includeEdges);
   }
 
   @protected
@@ -1193,8 +1306,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   IngestMemoryBankRequest sse_decode_ingest_memory_bank_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_handle = sse_decode_u_32(deserializer);
     var var_text = sse_decode_String(deserializer);
@@ -1204,31 +1316,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_replaceSource = sse_decode_bool(deserializer);
     var var_flush = sse_decode_bool(deserializer);
     return IngestMemoryBankRequest(
-      handle: var_handle,
-      text: var_text,
-      source: var_source,
-      memoryType: var_memoryType,
-      maxChunkChars: var_maxChunkChars,
-      replaceSource: var_replaceSource,
-      flush: var_flush,
-    );
+        handle: var_handle,
+        text: var_text,
+        source: var_source,
+        memoryType: var_memoryType,
+        maxChunkChars: var_maxChunkChars,
+        replaceSource: var_replaceSource,
+        flush: var_flush);
   }
 
   @protected
   IngestMemoryBankResult sse_decode_ingest_memory_bank_result(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_stored = sse_decode_u_32(deserializer);
     var var_replaced = sse_decode_u_32(deserializer);
     var var_memoryCount = sse_decode_u_32(deserializer);
     var var_memoryIds = sse_decode_list_String(deserializer);
     return IngestMemoryBankResult(
-      stored: var_stored,
-      replaced: var_replaced,
-      memoryCount: var_memoryCount,
-      memoryIds: var_memoryIds,
-    );
+        stored: var_stored,
+        replaced: var_replaced,
+        memoryCount: var_memoryCount,
+        memoryIds: var_memoryIds);
   }
 
   @protected
@@ -1245,8 +1354,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeGraphProjectionEdge> sse_decode_list_bridge_graph_projection_edge(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1259,8 +1367,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeGraphProjectionNode> sse_decode_list_bridge_graph_projection_node(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1273,8 +1380,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeRecalledMemory> sse_decode_list_bridge_recalled_memory(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1287,7 +1393,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<BridgeSleepMaintenanceIssue>
-  sse_decode_list_bridge_sleep_maintenance_issue(SseDeserializer deserializer) {
+      sse_decode_list_bridge_sleep_maintenance_issue(
+          SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1306,24 +1413,87 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<ProcessTurnContextItem> sse_decode_list_process_turn_context_item(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ProcessTurnContextItem>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_process_turn_context_item(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ProcessTurnDetectedAction> sse_decode_list_process_turn_detected_action(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ProcessTurnDetectedAction>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_process_turn_detected_action(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ProcessTurnPainWarning> sse_decode_list_process_turn_pain_warning(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ProcessTurnPainWarning>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_process_turn_pain_warning(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ProcessTurnProactiveRecall>
+      sse_decode_list_process_turn_proactive_recall(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ProcessTurnProactiveRecall>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_process_turn_proactive_recall(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ProcessTurnStoredMemory> sse_decode_list_process_turn_stored_memory(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ProcessTurnStoredMemory>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_process_turn_stored_memory(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   OpenDatabaseRequest sse_decode_open_database_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_path = sse_decode_String(deserializer);
     var var_embeddingDimensions = sse_decode_u_32(deserializer);
     var var_agentId = sse_decode_opt_String(deserializer);
     return OpenDatabaseRequest(
-      path: var_path,
-      embeddingDimensions: var_embeddingDimensions,
-      agentId: var_agentId,
-    );
+        path: var_path,
+        embeddingDimensions: var_embeddingDimensions,
+        agentId: var_agentId);
   }
 
   @protected
   OpenDatabaseResult sse_decode_open_database_result(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_handle = sse_decode_u_32(deserializer);
     var var_path = sse_decode_String(deserializer);
@@ -1331,12 +1501,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_embeddingDimensions = sse_decode_u_32(deserializer);
     var var_memoryCount = sse_decode_u_32(deserializer);
     return OpenDatabaseResult(
-      handle: var_handle,
-      path: var_path,
-      agentId: var_agentId,
-      embeddingDimensions: var_embeddingDimensions,
-      memoryCount: var_memoryCount,
-    );
+        handle: var_handle,
+        path: var_path,
+        agentId: var_agentId,
+        embeddingDimensions: var_embeddingDimensions,
+        memoryCount: var_memoryCount);
   }
 
   @protected
@@ -1362,9 +1531,170 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ProcessTurnContextItem sse_decode_process_turn_context_item(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_content = sse_decode_String(deserializer);
+    var var_score = sse_decode_f_32(deserializer);
+    var var_memoryType = sse_decode_bridge_memory_type(deserializer);
+    var var_tags = sse_decode_list_String(deserializer);
+    var var_createdAtMicros = sse_decode_i_64(deserializer);
+    var var_salience = sse_decode_f_32(deserializer);
+    var var_confidence = sse_decode_f_32(deserializer);
+    var var_isNew = sse_decode_bool(deserializer);
+    var var_fromCache = sse_decode_bool(deserializer);
+    var var_scope = sse_decode_String(deserializer);
+    return ProcessTurnContextItem(
+        id: var_id,
+        content: var_content,
+        score: var_score,
+        memoryType: var_memoryType,
+        tags: var_tags,
+        createdAtMicros: var_createdAtMicros,
+        salience: var_salience,
+        confidence: var_confidence,
+        isNew: var_isNew,
+        fromCache: var_fromCache,
+        scope: var_scope);
+  }
+
+  @protected
+  ProcessTurnDetectedAction sse_decode_process_turn_detected_action(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_actionType = sse_decode_String(deserializer);
+    var var_detail = sse_decode_String(deserializer);
+    return ProcessTurnDetectedAction(
+        actionType: var_actionType, detail: var_detail);
+  }
+
+  @protected
+  ProcessTurnPainWarning sse_decode_process_turn_pain_warning(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_signalId = sse_decode_String(deserializer);
+    var var_intensity = sse_decode_f_32(deserializer);
+    var var_description = sse_decode_String(deserializer);
+    return ProcessTurnPainWarning(
+        signalId: var_signalId,
+        intensity: var_intensity,
+        description: var_description);
+  }
+
+  @protected
+  ProcessTurnProactiveRecall sse_decode_process_turn_proactive_recall(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_memoryId = sse_decode_String(deserializer);
+    var var_content = sse_decode_String(deserializer);
+    var var_relevance = sse_decode_f_32(deserializer);
+    var var_actionType = sse_decode_String(deserializer);
+    return ProcessTurnProactiveRecall(
+        memoryId: var_memoryId,
+        content: var_content,
+        relevance: var_relevance,
+        actionType: var_actionType);
+  }
+
+  @protected
+  ProcessTurnRequest sse_decode_process_turn_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_handle = sse_decode_u_32(deserializer);
+    var var_userMessage = sse_decode_String(deserializer);
+    var var_assistantResponse = sse_decode_opt_String(deserializer);
+    var var_turnId = sse_decode_u_32(deserializer);
+    var var_projectContext = sse_decode_opt_String(deserializer);
+    var var_agentId = sse_decode_opt_String(deserializer);
+    var var_flush = sse_decode_bool(deserializer);
+    return ProcessTurnRequest(
+        handle: var_handle,
+        userMessage: var_userMessage,
+        assistantResponse: var_assistantResponse,
+        turnId: var_turnId,
+        projectContext: var_projectContext,
+        agentId: var_agentId,
+        flush: var_flush);
+  }
+
+  @protected
+  ProcessTurnResult sse_decode_process_turn_result(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_context = sse_decode_list_process_turn_context_item(deserializer);
+    var var_contextText = sse_decode_String(deserializer);
+    var var_stored = sse_decode_u_32(deserializer);
+    var var_storedIds = sse_decode_list_String(deserializer);
+    var var_storedMemories =
+        sse_decode_list_process_turn_stored_memory(deserializer);
+    var var_episodicId = sse_decode_opt_String(deserializer);
+    var var_painWarnings =
+        sse_decode_list_process_turn_pain_warning(deserializer);
+    var var_cacheHit = sse_decode_bool(deserializer);
+    var var_inferenceActions = sse_decode_u_32(deserializer);
+    var var_detectedActions =
+        sse_decode_list_process_turn_detected_action(deserializer);
+    var var_proactiveRecalls =
+        sse_decode_list_process_turn_proactive_recall(deserializer);
+    var var_correctionId = sse_decode_opt_String(deserializer);
+    var var_sentiment = sse_decode_f_32(deserializer);
+    var var_phantomCount = sse_decode_u_32(deserializer);
+    var var_contradictionCount = sse_decode_u_32(deserializer);
+    var var_predictedTopics = sse_decode_list_String(deserializer);
+    var var_factsExtracted = sse_decode_u_32(deserializer);
+    var var_edgesCreated = sse_decode_u_32(deserializer);
+    var var_enrichmentPending = sse_decode_bool(deserializer);
+    var var_deltaAdded = sse_decode_list_String(deserializer);
+    var var_deltaRemoved = sse_decode_list_String(deserializer);
+    var var_memoryCount = sse_decode_u_32(deserializer);
+    return ProcessTurnResult(
+        context: var_context,
+        contextText: var_contextText,
+        stored: var_stored,
+        storedIds: var_storedIds,
+        storedMemories: var_storedMemories,
+        episodicId: var_episodicId,
+        painWarnings: var_painWarnings,
+        cacheHit: var_cacheHit,
+        inferenceActions: var_inferenceActions,
+        detectedActions: var_detectedActions,
+        proactiveRecalls: var_proactiveRecalls,
+        correctionId: var_correctionId,
+        sentiment: var_sentiment,
+        phantomCount: var_phantomCount,
+        contradictionCount: var_contradictionCount,
+        predictedTopics: var_predictedTopics,
+        factsExtracted: var_factsExtracted,
+        edgesCreated: var_edgesCreated,
+        enrichmentPending: var_enrichmentPending,
+        deltaAdded: var_deltaAdded,
+        deltaRemoved: var_deltaRemoved,
+        memoryCount: var_memoryCount);
+  }
+
+  @protected
+  ProcessTurnStoredMemory sse_decode_process_turn_stored_memory(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_content = sse_decode_String(deserializer);
+    var var_memoryType = sse_decode_bridge_memory_type(deserializer);
+    var var_tags = sse_decode_list_String(deserializer);
+    var var_salience = sse_decode_f_32(deserializer);
+    var var_confidence = sse_decode_f_32(deserializer);
+    return ProcessTurnStoredMemory(
+        id: var_id,
+        content: var_content,
+        memoryType: var_memoryType,
+        tags: var_tags,
+        salience: var_salience,
+        confidence: var_confidence);
+  }
+
+  @protected
   RecallMemoryContextRequest sse_decode_recall_memory_context_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_handle = sse_decode_u_32(deserializer);
     var var_query = sse_decode_String(deserializer);
@@ -1372,33 +1702,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_maxContextChars = sse_decode_u_32(deserializer);
     var var_source = sse_decode_opt_String(deserializer);
     return RecallMemoryContextRequest(
-      handle: var_handle,
-      query: var_query,
-      limit: var_limit,
-      maxContextChars: var_maxContextChars,
-      source: var_source,
-    );
+        handle: var_handle,
+        query: var_query,
+        limit: var_limit,
+        maxContextChars: var_maxContextChars,
+        source: var_source);
   }
 
   @protected
   RecallMemoryContextResult sse_decode_recall_memory_context_result(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_context = sse_decode_String(deserializer);
     var var_memories = sse_decode_list_bridge_recalled_memory(deserializer);
     var var_truncated = sse_decode_bool(deserializer);
     return RecallMemoryContextResult(
-      context: var_context,
-      memories: var_memories,
-      truncated: var_truncated,
-    );
+        context: var_context, memories: var_memories, truncated: var_truncated);
   }
 
   @protected
   RunSleepMaintenanceRequest sse_decode_run_sleep_maintenance_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_handle = sse_decode_u_32(deserializer);
     var var_maxMemories = sse_decode_u_32(deserializer);
@@ -1411,23 +1735,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_consolidationSimilarityThreshold = sse_decode_f_32(deserializer);
     var var_linkEntities = sse_decode_bool(deserializer);
     return RunSleepMaintenanceRequest(
-      handle: var_handle,
-      maxMemories: var_maxMemories,
-      applyDecay: var_applyDecay,
-      evaluateArchival: var_evaluateArchival,
-      applyArchivalDeletes: var_applyArchivalDeletes,
-      runConsolidation: var_runConsolidation,
-      maxConsolidationClusters: var_maxConsolidationClusters,
-      consolidationMinClusterSize: var_consolidationMinClusterSize,
-      consolidationSimilarityThreshold: var_consolidationSimilarityThreshold,
-      linkEntities: var_linkEntities,
-    );
+        handle: var_handle,
+        maxMemories: var_maxMemories,
+        applyDecay: var_applyDecay,
+        evaluateArchival: var_evaluateArchival,
+        applyArchivalDeletes: var_applyArchivalDeletes,
+        runConsolidation: var_runConsolidation,
+        maxConsolidationClusters: var_maxConsolidationClusters,
+        consolidationMinClusterSize: var_consolidationMinClusterSize,
+        consolidationSimilarityThreshold: var_consolidationSimilarityThreshold,
+        linkEntities: var_linkEntities);
   }
 
   @protected
   StoreConversationTurnRequest sse_decode_store_conversation_turn_request(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_handle = sse_decode_u_32(deserializer);
     var var_conversationId = sse_decode_String(deserializer);
@@ -1437,31 +1759,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_source = sse_decode_String(deserializer);
     var var_flush = sse_decode_bool(deserializer);
     return StoreConversationTurnRequest(
-      handle: var_handle,
-      conversationId: var_conversationId,
-      turnIndex: var_turnIndex,
-      userMessage: var_userMessage,
-      assistantMessage: var_assistantMessage,
-      source: var_source,
-      flush: var_flush,
-    );
+        handle: var_handle,
+        conversationId: var_conversationId,
+        turnIndex: var_turnIndex,
+        userMessage: var_userMessage,
+        assistantMessage: var_assistantMessage,
+        source: var_source,
+        flush: var_flush);
   }
 
   @protected
   StoreConversationTurnResult sse_decode_store_conversation_turn_result(
-    SseDeserializer deserializer,
-  ) {
+      SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_stored = sse_decode_u_32(deserializer);
     var var_userMemoryId = sse_decode_String(deserializer);
     var var_assistantMemoryId = sse_decode_String(deserializer);
     var var_memoryCount = sse_decode_u_32(deserializer);
     return StoreConversationTurnResult(
-      stored: var_stored,
-      userMemoryId: var_userMemoryId,
-      assistantMemoryId: var_assistantMemoryId,
-      memoryCount: var_memoryCount,
-    );
+        stored: var_stored,
+        userMemoryId: var_userMemoryId,
+        assistantMemoryId: var_assistantMemoryId,
+        memoryCount: var_memoryCount);
   }
 
   @protected
@@ -1483,9 +1802,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_AnyhowException(
-    AnyhowException self,
-    SseSerializer serializer,
-  ) {
+      AnyhowException self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.message, serializer);
   }
@@ -1504,81 +1821,70 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_box_autoadd_graph_projection_request(
-    GraphProjectionRequest self,
-    SseSerializer serializer,
-  ) {
+      GraphProjectionRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_graph_projection_request(self, serializer);
   }
 
   @protected
   void sse_encode_box_autoadd_i_64(
-    PlatformInt64 self,
-    SseSerializer serializer,
-  ) {
+      PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_64(self, serializer);
   }
 
   @protected
   void sse_encode_box_autoadd_ingest_memory_bank_request(
-    IngestMemoryBankRequest self,
-    SseSerializer serializer,
-  ) {
+      IngestMemoryBankRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ingest_memory_bank_request(self, serializer);
   }
 
   @protected
   void sse_encode_box_autoadd_open_database_request(
-    OpenDatabaseRequest self,
-    SseSerializer serializer,
-  ) {
+      OpenDatabaseRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_open_database_request(self, serializer);
   }
 
   @protected
+  void sse_encode_box_autoadd_process_turn_request(
+      ProcessTurnRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_process_turn_request(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_recall_memory_context_request(
-    RecallMemoryContextRequest self,
-    SseSerializer serializer,
-  ) {
+      RecallMemoryContextRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_recall_memory_context_request(self, serializer);
   }
 
   @protected
   void sse_encode_box_autoadd_run_sleep_maintenance_request(
-    RunSleepMaintenanceRequest self,
-    SseSerializer serializer,
-  ) {
+      RunSleepMaintenanceRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_run_sleep_maintenance_request(self, serializer);
   }
 
   @protected
   void sse_encode_box_autoadd_store_conversation_turn_request(
-    StoreConversationTurnRequest self,
-    SseSerializer serializer,
-  ) {
+      StoreConversationTurnRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_store_conversation_turn_request(self, serializer);
   }
 
   @protected
   void sse_encode_bridge_edge_type(
-    BridgeEdgeType self,
-    SseSerializer serializer,
-  ) {
+      BridgeEdgeType self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
   }
 
   @protected
   void sse_encode_bridge_graph_projection(
-    BridgeGraphProjection self,
-    SseSerializer serializer,
-  ) {
+      BridgeGraphProjection self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_bridge_graph_projection_node(self.nodes, serializer);
     sse_encode_list_bridge_graph_projection_edge(self.edges, serializer);
@@ -1588,9 +1894,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_bridge_graph_projection_edge(
-    BridgeGraphProjectionEdge self,
-    SseSerializer serializer,
-  ) {
+      BridgeGraphProjectionEdge self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.source, serializer);
     sse_encode_String(self.target, serializer);
@@ -1603,9 +1907,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_bridge_graph_projection_node(
-    BridgeGraphProjectionNode self,
-    SseSerializer serializer,
-  ) {
+      BridgeGraphProjectionNode self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.label, serializer);
@@ -1622,18 +1924,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_bridge_memory_type(
-    BridgeMemoryType self,
-    SseSerializer serializer,
-  ) {
+      BridgeMemoryType self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
   }
 
   @protected
   void sse_encode_bridge_recalled_memory(
-    BridgeRecalledMemory self,
-    SseSerializer serializer,
-  ) {
+      BridgeRecalledMemory self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.content, serializer);
@@ -1647,9 +1945,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_bridge_sleep_maintenance_issue(
-    BridgeSleepMaintenanceIssue self,
-    SseSerializer serializer,
-  ) {
+      BridgeSleepMaintenanceIssue self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.stage, serializer);
     sse_encode_opt_String(self.memoryId, serializer);
@@ -1658,9 +1954,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_bridge_sleep_maintenance_result(
-    BridgeSleepMaintenanceResult self,
-    SseSerializer serializer,
-  ) {
+      BridgeSleepMaintenanceResult self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_bool(self.leaseAcquired, serializer);
     sse_encode_u_32(self.processedMemories, serializer);
@@ -1690,9 +1984,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_graph_projection_request(
-    GraphProjectionRequest self,
-    SseSerializer serializer,
-  ) {
+      GraphProjectionRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.handle, serializer);
     sse_encode_opt_String(self.center, serializer);
@@ -1718,9 +2010,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_ingest_memory_bank_request(
-    IngestMemoryBankRequest self,
-    SseSerializer serializer,
-  ) {
+      IngestMemoryBankRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.handle, serializer);
     sse_encode_String(self.text, serializer);
@@ -1733,9 +2023,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_ingest_memory_bank_result(
-    IngestMemoryBankResult self,
-    SseSerializer serializer,
-  ) {
+      IngestMemoryBankResult self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.stored, serializer);
     sse_encode_u_32(self.replaced, serializer);
@@ -1754,9 +2042,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_bridge_graph_projection_edge(
-    List<BridgeGraphProjectionEdge> self,
-    SseSerializer serializer,
-  ) {
+      List<BridgeGraphProjectionEdge> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1766,9 +2052,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_bridge_graph_projection_node(
-    List<BridgeGraphProjectionNode> self,
-    SseSerializer serializer,
-  ) {
+      List<BridgeGraphProjectionNode> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1778,9 +2062,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_bridge_recalled_memory(
-    List<BridgeRecalledMemory> self,
-    SseSerializer serializer,
-  ) {
+      List<BridgeRecalledMemory> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1790,9 +2072,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_bridge_sleep_maintenance_issue(
-    List<BridgeSleepMaintenanceIssue> self,
-    SseSerializer serializer,
-  ) {
+      List<BridgeSleepMaintenanceIssue> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1802,19 +2082,65 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_prim_u_8_strict(
-    Uint8List self,
-    SseSerializer serializer,
-  ) {
+      Uint8List self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
   }
 
   @protected
+  void sse_encode_list_process_turn_context_item(
+      List<ProcessTurnContextItem> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_process_turn_context_item(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_process_turn_detected_action(
+      List<ProcessTurnDetectedAction> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_process_turn_detected_action(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_process_turn_pain_warning(
+      List<ProcessTurnPainWarning> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_process_turn_pain_warning(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_process_turn_proactive_recall(
+      List<ProcessTurnProactiveRecall> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_process_turn_proactive_recall(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_process_turn_stored_memory(
+      List<ProcessTurnStoredMemory> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_process_turn_stored_memory(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_open_database_request(
-    OpenDatabaseRequest self,
-    SseSerializer serializer,
-  ) {
+      OpenDatabaseRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.path, serializer);
     sse_encode_u_32(self.embeddingDimensions, serializer);
@@ -1823,9 +2149,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_open_database_result(
-    OpenDatabaseResult self,
-    SseSerializer serializer,
-  ) {
+      OpenDatabaseResult self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.handle, serializer);
     sse_encode_String(self.path, serializer);
@@ -1846,9 +2170,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(
-    PlatformInt64? self,
-    SseSerializer serializer,
-  ) {
+      PlatformInt64? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
@@ -1858,10 +2180,107 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_process_turn_context_item(
+      ProcessTurnContextItem self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.content, serializer);
+    sse_encode_f_32(self.score, serializer);
+    sse_encode_bridge_memory_type(self.memoryType, serializer);
+    sse_encode_list_String(self.tags, serializer);
+    sse_encode_i_64(self.createdAtMicros, serializer);
+    sse_encode_f_32(self.salience, serializer);
+    sse_encode_f_32(self.confidence, serializer);
+    sse_encode_bool(self.isNew, serializer);
+    sse_encode_bool(self.fromCache, serializer);
+    sse_encode_String(self.scope, serializer);
+  }
+
+  @protected
+  void sse_encode_process_turn_detected_action(
+      ProcessTurnDetectedAction self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.actionType, serializer);
+    sse_encode_String(self.detail, serializer);
+  }
+
+  @protected
+  void sse_encode_process_turn_pain_warning(
+      ProcessTurnPainWarning self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.signalId, serializer);
+    sse_encode_f_32(self.intensity, serializer);
+    sse_encode_String(self.description, serializer);
+  }
+
+  @protected
+  void sse_encode_process_turn_proactive_recall(
+      ProcessTurnProactiveRecall self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.memoryId, serializer);
+    sse_encode_String(self.content, serializer);
+    sse_encode_f_32(self.relevance, serializer);
+    sse_encode_String(self.actionType, serializer);
+  }
+
+  @protected
+  void sse_encode_process_turn_request(
+      ProcessTurnRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.handle, serializer);
+    sse_encode_String(self.userMessage, serializer);
+    sse_encode_opt_String(self.assistantResponse, serializer);
+    sse_encode_u_32(self.turnId, serializer);
+    sse_encode_opt_String(self.projectContext, serializer);
+    sse_encode_opt_String(self.agentId, serializer);
+    sse_encode_bool(self.flush, serializer);
+  }
+
+  @protected
+  void sse_encode_process_turn_result(
+      ProcessTurnResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_process_turn_context_item(self.context, serializer);
+    sse_encode_String(self.contextText, serializer);
+    sse_encode_u_32(self.stored, serializer);
+    sse_encode_list_String(self.storedIds, serializer);
+    sse_encode_list_process_turn_stored_memory(self.storedMemories, serializer);
+    sse_encode_opt_String(self.episodicId, serializer);
+    sse_encode_list_process_turn_pain_warning(self.painWarnings, serializer);
+    sse_encode_bool(self.cacheHit, serializer);
+    sse_encode_u_32(self.inferenceActions, serializer);
+    sse_encode_list_process_turn_detected_action(
+        self.detectedActions, serializer);
+    sse_encode_list_process_turn_proactive_recall(
+        self.proactiveRecalls, serializer);
+    sse_encode_opt_String(self.correctionId, serializer);
+    sse_encode_f_32(self.sentiment, serializer);
+    sse_encode_u_32(self.phantomCount, serializer);
+    sse_encode_u_32(self.contradictionCount, serializer);
+    sse_encode_list_String(self.predictedTopics, serializer);
+    sse_encode_u_32(self.factsExtracted, serializer);
+    sse_encode_u_32(self.edgesCreated, serializer);
+    sse_encode_bool(self.enrichmentPending, serializer);
+    sse_encode_list_String(self.deltaAdded, serializer);
+    sse_encode_list_String(self.deltaRemoved, serializer);
+    sse_encode_u_32(self.memoryCount, serializer);
+  }
+
+  @protected
+  void sse_encode_process_turn_stored_memory(
+      ProcessTurnStoredMemory self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.content, serializer);
+    sse_encode_bridge_memory_type(self.memoryType, serializer);
+    sse_encode_list_String(self.tags, serializer);
+    sse_encode_f_32(self.salience, serializer);
+    sse_encode_f_32(self.confidence, serializer);
+  }
+
+  @protected
   void sse_encode_recall_memory_context_request(
-    RecallMemoryContextRequest self,
-    SseSerializer serializer,
-  ) {
+      RecallMemoryContextRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.handle, serializer);
     sse_encode_String(self.query, serializer);
@@ -1872,9 +2291,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_recall_memory_context_result(
-    RecallMemoryContextResult self,
-    SseSerializer serializer,
-  ) {
+      RecallMemoryContextResult self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.context, serializer);
     sse_encode_list_bridge_recalled_memory(self.memories, serializer);
@@ -1883,9 +2300,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_run_sleep_maintenance_request(
-    RunSleepMaintenanceRequest self,
-    SseSerializer serializer,
-  ) {
+      RunSleepMaintenanceRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.handle, serializer);
     sse_encode_u_32(self.maxMemories, serializer);
@@ -1901,9 +2316,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_store_conversation_turn_request(
-    StoreConversationTurnRequest self,
-    SseSerializer serializer,
-  ) {
+      StoreConversationTurnRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.handle, serializer);
     sse_encode_String(self.conversationId, serializer);
@@ -1916,9 +2329,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_store_conversation_turn_result(
-    StoreConversationTurnResult self,
-    SseSerializer serializer,
-  ) {
+      StoreConversationTurnResult self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.stored, serializer);
     sse_encode_String(self.userMemoryId, serializer);

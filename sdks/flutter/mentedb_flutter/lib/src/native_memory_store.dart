@@ -31,6 +31,14 @@ abstract interface class MenteDbMemoryStore {
     int maxContextChars = defaultNativeRecallContextChars,
   });
 
+  Future<bridge.ProcessTurnResult> processTurn(
+    String userMessage, {
+    String? assistantResponse,
+    int turnId = 0,
+    String? projectContext,
+    String? agentId,
+  });
+
   Future<bridge.StoreConversationTurnResult> storeConversationTurn({
     required String conversationId,
     required int turnIndex,
@@ -148,6 +156,28 @@ final class RustMenteDbMemoryStore implements MenteDbMemoryStore {
   }
 
   @override
+  Future<bridge.ProcessTurnResult> processTurn(
+    String userMessage, {
+    String? assistantResponse,
+    int turnId = 0,
+    String? projectContext,
+    String? agentId,
+  }) {
+    _throwIfClosed();
+    return bridge.processTurn(
+      request: bridge.ProcessTurnRequest(
+        handle: _handle,
+        userMessage: userMessage,
+        assistantResponse: assistantResponse,
+        turnId: turnId,
+        projectContext: projectContext,
+        agentId: agentId,
+        flush: true,
+      ),
+    );
+  }
+
+  @override
   Future<bridge.StoreConversationTurnResult> storeConversationTurn({
     required String conversationId,
     required int turnIndex,
@@ -243,6 +273,110 @@ final class RustMenteDbMemoryStore implements MenteDbMemoryStore {
       throw StateError('MenteDB memory store is closed.');
     }
   }
+}
+
+// ignore: camel_case_types
+final class MenteDB {
+  MenteDB._(this._store);
+
+  final RustMenteDbMemoryStore _store;
+
+  String get databasePath => _store.databasePath;
+  String get agentId => _store.agentId;
+  int get embeddingDimensions => _store.embeddingDimensions;
+
+  static Future<MenteDB> open(
+    String path, {
+    int embeddingDimensions = defaultNativeEmbeddingDimensions,
+    String? agentId,
+  }) async {
+    final store = await RustMenteDbMemoryStore.open(
+      path: path,
+      embeddingDimensions: embeddingDimensions,
+      agentId: agentId,
+    );
+    return MenteDB._(store);
+  }
+
+  Future<bridge.ProcessTurnResult> processTurn(
+    String userMessage, {
+    String? assistantResponse,
+    int turnId = 0,
+    String? projectContext,
+    String? agentId,
+  }) {
+    return _store.processTurn(
+      userMessage,
+      assistantResponse: assistantResponse,
+      turnId: turnId,
+      projectContext: projectContext,
+      agentId: agentId,
+    );
+  }
+
+  Future<bridge.IngestMemoryBankResult> storeTextMemoryBank(
+    String text, {
+    String source = defaultNativeMemorySource,
+    bridge.BridgeMemoryType memoryType = bridge.BridgeMemoryType.semantic,
+    int maxChunkChars = defaultNativeMemoryChunkChars,
+  }) {
+    return _store.replaceMemoryBank(
+      text,
+      source: source,
+      memoryType: memoryType,
+      maxChunkChars: maxChunkChars,
+    );
+  }
+
+  Future<bridge.BridgeSleepMaintenanceResult> runSleepMaintenance({
+    int maxMemories = defaultNativeSleepMaxMemories,
+    bool applyDecay = true,
+    bool evaluateArchival = true,
+    bool applyArchivalDeletes = false,
+    bool runConsolidation = true,
+    int maxConsolidationClusters = 4,
+    int consolidationMinClusterSize = 2,
+    double consolidationSimilarityThreshold = 0.85,
+    bool linkEntities = true,
+  }) {
+    return _store.runSleepMaintenance(
+      maxMemories: maxMemories,
+      applyDecay: applyDecay,
+      evaluateArchival: evaluateArchival,
+      applyArchivalDeletes: applyArchivalDeletes,
+      runConsolidation: runConsolidation,
+      maxConsolidationClusters: maxConsolidationClusters,
+      consolidationMinClusterSize: consolidationMinClusterSize,
+      consolidationSimilarityThreshold: consolidationSimilarityThreshold,
+      linkEntities: linkEntities,
+    );
+  }
+
+  Future<bridge.BridgeGraphProjection> graphProjection({
+    String? center,
+    int depth = 2,
+    int limit = defaultNativeGraphLimit,
+    int labelChars = 64,
+    int previewChars = 240,
+    bool includeInvalidated = false,
+    bool includeEdges = true,
+  }) {
+    return _store.graphProjection(
+      center: center,
+      depth: depth,
+      limit: limit,
+      labelChars: labelChars,
+      previewChars: previewChars,
+      includeInvalidated: includeInvalidated,
+      includeEdges: includeEdges,
+    );
+  }
+
+  Future<int> memoryCount() => _store.memoryCount();
+
+  Future<void> close() => _store.close();
+
+  RustMenteDbMemoryStore get nativeStore => _store;
 }
 
 final class MenteDbRustBridge {
