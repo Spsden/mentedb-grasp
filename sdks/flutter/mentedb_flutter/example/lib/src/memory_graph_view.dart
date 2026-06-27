@@ -108,6 +108,12 @@ class _MemoryGraphViewState extends State<MemoryGraphView> {
               projection: projection,
               selectedNodeId: widget.selectedNodeId,
             ),
+            const SizedBox(height: 10),
+            _GraphRelationshipList(
+              projection: projection,
+              selectedNodeId: widget.selectedNodeId,
+              onNodeSelected: widget.onNodeSelected,
+            ),
           ],
         );
       },
@@ -145,6 +151,7 @@ class _GraphNodeDetail extends StatelessWidget {
       }
     }
     final node = selected ?? projection.nodes.first;
+    final tags = node.tags.take(4).toList(growable: false);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
@@ -184,11 +191,141 @@ class _GraphNodeDetail extends StatelessWidget {
                       Text('Confidence ${node.confidence.toStringAsFixed(2)}'),
                   visualDensity: VisualDensity.compact,
                 ),
+                if (node.embeddingDim > 0)
+                  Chip(
+                    avatar: const Icon(Icons.functions, size: 16),
+                    label: Text('Embedding ${node.embeddingDim}d'),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                for (final tag in tags)
+                  Chip(
+                    avatar: const Icon(Icons.label_outline, size: 16),
+                    label: Text(_compactText(tag, 28)),
+                    visualDensity: VisualDensity.compact,
+                  ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _GraphRelationshipList extends StatelessWidget {
+  const _GraphRelationshipList({
+    required this.projection,
+    required this.selectedNodeId,
+    required this.onNodeSelected,
+  });
+
+  final BridgeGraphProjection? projection;
+  final String? selectedNodeId;
+  final ValueChanged<String?> onNodeSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final projection = this.projection;
+    if (projection == null || projection.edges.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final selectedId = selectedNodeId;
+    final byId = {for (final node in projection.nodes) node.id: node};
+    final edges = selectedId == null
+        ? projection.edges.take(8).toList(growable: false)
+        : projection.edges
+            .where((edge) =>
+                edge.source == selectedId || edge.target == selectedId)
+            .take(12)
+            .toList(growable: false);
+
+    if (edges.isEmpty) {
+      return Text(
+        'No relationships for selected memory',
+        style: Theme.of(context).textTheme.bodySmall,
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Relationships',
+                style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            for (final edge in edges) ...[
+              _RelationshipRow(
+                edge: edge,
+                source: byId[edge.source],
+                target: byId[edge.target],
+                onNodeSelected: onNodeSelected,
+              ),
+              if (edge != edges.last) const Divider(height: 12),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RelationshipRow extends StatelessWidget {
+  const _RelationshipRow({
+    required this.edge,
+    required this.source,
+    required this.target,
+    required this.onNodeSelected,
+  });
+
+  final BridgeGraphProjectionEdge edge;
+  final BridgeGraphProjectionNode? source;
+  final BridgeGraphProjectionNode? target;
+  final ValueChanged<String?> onNodeSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final sourceLabel = _compactText(source?.label ?? edge.source, 36);
+    final targetLabel = _compactText(target?.label ?? edge.target, 36);
+    final relation = _edgeDisplayName(edge);
+    final color = _edgeColor(edge.edgeType, Theme.of(context).colorScheme);
+
+    return Row(
+      children: [
+        Expanded(
+          child: TextButton(
+            onPressed: () => onNodeSelected(edge.source),
+            style: TextButton.styleFrom(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(sourceLabel, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+        Chip(
+          avatar: Icon(Icons.arrow_forward, size: 15, color: color),
+          label: Text(relation),
+          visualDensity: VisualDensity.compact,
+        ),
+        Expanded(
+          child: TextButton(
+            onPressed: () => onNodeSelected(edge.target),
+            style: TextButton.styleFrom(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(targetLabel, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -244,11 +381,29 @@ class _GraphPainter extends CustomPainter {
       if (source == null || target == null) {
         continue;
       }
-      final alpha = ((source.depth + target.depth) / 2).clamp(0.22, 0.78);
+      final selectedEdge =
+          edge.source == selectedNodeId || edge.target == selectedNodeId;
+      final alpha = selectedEdge
+          ? 0.92
+          : ((source.depth + target.depth) / 2).clamp(0.26, 0.72);
       edgePaint.color = _edgeColor(edge.edgeType, colorScheme).withValues(
         alpha: alpha,
       );
-      canvas.drawLine(source.offset, target.offset, edgePaint);
+      edgePaint.strokeWidth = selectedEdge ? 2.2 : 1.2;
+      final endpoints = _edgeEndpoints(source, target);
+      canvas.drawLine(endpoints.start, endpoints.end, edgePaint);
+      _drawArrowHead(canvas, endpoints.start, endpoints.end, edgePaint.color);
+      if (projection.edges.length <= 80 || selectedEdge) {
+        _drawEdgeLabel(
+          canvas,
+          edge,
+          endpoints.start,
+          endpoints.end,
+          edgePaint.color,
+          colorScheme,
+          selectedEdge,
+        );
+      }
     }
 
     projected.sort((a, b) => a.depth.compareTo(b.depth));
@@ -280,6 +435,12 @@ class _GraphPainter extends CustomPainter {
           ..color = selected ? colorScheme.primary : colorScheme.outline,
       );
     }
+    for (final node in projected) {
+      final selected = node.node.id == selectedNodeId;
+      if (selected || projection.nodes.length <= 80 || node.depth > 0.62) {
+        _drawNodeLabel(canvas, size, node, colorScheme, selected);
+      }
+    }
   }
 
   @override
@@ -292,6 +453,154 @@ class _GraphPainter extends CustomPainter {
         oldDelegate.zoom != zoom ||
         oldDelegate.isLoading != isLoading;
   }
+}
+
+_EdgeEndpoints _edgeEndpoints(_ProjectedNode source, _ProjectedNode target) {
+  final delta = target.offset - source.offset;
+  final distance = delta.distance;
+  if (distance <= 0.01) {
+    return _EdgeEndpoints(start: source.offset, end: target.offset);
+  }
+
+  final unit = Offset(delta.dx / distance, delta.dy / distance);
+  return _EdgeEndpoints(
+    start: source.offset + unit * (source.radius + 2),
+    end: target.offset - unit * (target.radius + 5),
+  );
+}
+
+void _drawArrowHead(Canvas canvas, Offset start, Offset end, Color color) {
+  final delta = end - start;
+  final distance = delta.distance;
+  if (distance <= 10) {
+    return;
+  }
+
+  final unit = Offset(delta.dx / distance, delta.dy / distance);
+  final normal = Offset(-unit.dy, unit.dx);
+  final tip = end;
+  final base = tip - unit * 9;
+  final path = Path()
+    ..moveTo(tip.dx, tip.dy)
+    ..lineTo((base + normal * 4.5).dx, (base + normal * 4.5).dy)
+    ..lineTo((base - normal * 4.5).dx, (base - normal * 4.5).dy)
+    ..close();
+  canvas.drawPath(
+    path,
+    Paint()
+      ..style = PaintingStyle.fill
+      ..color = color,
+  );
+}
+
+void _drawEdgeLabel(
+  Canvas canvas,
+  BridgeGraphProjectionEdge edge,
+  Offset start,
+  Offset end,
+  Color color,
+  ColorScheme colorScheme,
+  bool selected,
+) {
+  final midpoint = Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+  final text = _compactText(_edgeDisplayName(edge), selected ? 34 : 22);
+  final painter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: TextStyle(
+        color:
+            selected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
+        fontSize: selected ? 12 : 10.5,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      ),
+    ),
+    textDirection: TextDirection.ltr,
+    maxLines: 1,
+    ellipsis: '...',
+  )..layout(maxWidth: selected ? 190 : 140);
+  final rect = Rect.fromCenter(
+    center: midpoint,
+    width: painter.width + 12,
+    height: painter.height + 6,
+  );
+  final background = selected
+      ? colorScheme.primaryContainer.withValues(alpha: 0.94)
+      : colorScheme.surface.withValues(alpha: 0.88);
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+    Paint()
+      ..style = PaintingStyle.fill
+      ..color = background,
+  );
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = selected ? 1.2 : 0.8
+      ..color = color.withValues(alpha: selected ? 0.85 : 0.55),
+  );
+  painter.paint(
+    canvas,
+    Offset(rect.left + 6, rect.top + 3),
+  );
+}
+
+void _drawNodeLabel(
+  Canvas canvas,
+  Size size,
+  _ProjectedNode node,
+  ColorScheme colorScheme,
+  bool selected,
+) {
+  final label = _compactText(node.node.label, selected ? 42 : 30);
+  final painter = TextPainter(
+    text: TextSpan(
+      text: label,
+      style: TextStyle(
+        color:
+            selected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
+        fontSize: selected ? 13 : 11.5,
+        fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+      ),
+    ),
+    textDirection: TextDirection.ltr,
+    maxLines: 2,
+    ellipsis: '...',
+  )..layout(maxWidth: selected ? 220 : 170);
+
+  final preferredLeft = node.offset.dx + node.radius + 8;
+  final preferredTop = node.offset.dy - painter.height / 2;
+  final left = preferredLeft
+      .clamp(8.0, math.max(8.0, size.width - painter.width - 18))
+      .toDouble();
+  final top = preferredTop
+      .clamp(8.0, math.max(8.0, size.height - painter.height - 18))
+      .toDouble();
+  final rect = Rect.fromLTWH(
+    left - 5,
+    top - 4,
+    painter.width + 10,
+    painter.height + 8,
+  );
+  final fill = selected
+      ? colorScheme.primaryContainer.withValues(alpha: 0.96)
+      : colorScheme.surface.withValues(alpha: 0.9);
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+    Paint()
+      ..style = PaintingStyle.fill
+      ..color = fill,
+  );
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = selected ? 1.2 : 0.7
+      ..color = _nodeColor(node.node.memoryType, colorScheme).withValues(
+        alpha: selected ? 0.9 : 0.52,
+      ),
+  );
+  painter.paint(canvas, Offset(left, top));
 }
 
 _ProjectedNode? _nearestNode(
@@ -407,6 +716,55 @@ Color _edgeColor(BridgeEdgeType type, ColorScheme colorScheme) {
     BridgeEdgeType.derived => colorScheme.secondary,
     BridgeEdgeType.partOf => colorScheme.tertiary,
   };
+}
+
+String _edgeDisplayName(BridgeGraphProjectionEdge edge) {
+  final type = _edgeTypeName(edge.edgeType);
+  final label = edge.label?.trim();
+  if (label == null || label.isEmpty) {
+    return type;
+  }
+
+  final normalized = _friendlyLabel(label);
+  if (normalized.toLowerCase() == type.toLowerCase()) {
+    return type;
+  }
+  return '$normalized / $type';
+}
+
+String _edgeTypeName(BridgeEdgeType type) {
+  return switch (type) {
+    BridgeEdgeType.caused => 'caused',
+    BridgeEdgeType.before => 'before',
+    BridgeEdgeType.related => 'related',
+    BridgeEdgeType.contradicts => 'contradicts',
+    BridgeEdgeType.supports => 'supports',
+    BridgeEdgeType.supersedes => 'supersedes',
+    BridgeEdgeType.derived => 'derived',
+    BridgeEdgeType.partOf => 'part of',
+  };
+}
+
+String _friendlyLabel(String value) {
+  return value.trim().replaceAll(RegExp(r'[_\s]+'), ' ');
+}
+
+String _compactText(String value, int maxChars) {
+  final normalized = _friendlyLabel(value);
+  if (normalized.length <= maxChars) {
+    return normalized;
+  }
+  if (maxChars <= 3) {
+    return normalized.substring(0, maxChars);
+  }
+  return '${normalized.substring(0, maxChars - 3)}...';
+}
+
+final class _EdgeEndpoints {
+  const _EdgeEndpoints({required this.start, required this.end});
+
+  final Offset start;
+  final Offset end;
 }
 
 final class _ProjectedNode {
