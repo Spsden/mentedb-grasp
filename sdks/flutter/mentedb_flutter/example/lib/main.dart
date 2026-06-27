@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:mentedb_flutter/mentedb_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'src/demo_scenarios.dart';
+import 'src/memory_activity_view.dart';
 import 'src/memory_graph_view.dart';
 import 'src/memory_prompt.dart';
 import 'src/openai_compatible_client.dart';
@@ -97,8 +99,12 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     text: defaultOpenRouterTitle,
   );
   final _systemController = TextEditingController(text: defaultSystemPrompt);
-  final _promptController = TextEditingController(text: sampleUserPrompt);
-  final _memoryController = TextEditingController(text: sampleMemoryBank);
+  final _promptController = TextEditingController(
+    text: demoPersonas.first.scenario.steps.first.userPrompt,
+  );
+  final _memoryController = TextEditingController(
+    text: demoPersonas.first.memoryBank,
+  );
 
   double _temperature = 0.2;
   bool _hideApiKey = true;
@@ -106,8 +112,9 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
   bool _isMaintaining = false;
   bool _isLoadingGraph = false;
   bool _runSleepMaintenance = true;
-  late final String _conversationId =
-      'demo-${DateTime.now().microsecondsSinceEpoch}';
+  String _conversationId = _newConversationId();
+  String _selectedPersonaId = demoPersonas.first.id;
+  int _scenarioStepIndex = 0;
   int _turnIndex = 0;
   Future<MenteDbMemoryStore>? _memoryStoreFuture;
   MenteDbMemoryStore? _memoryStore;
@@ -118,10 +125,20 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
   RecallMemoryContextResult? _recallResult;
   BridgeSleepMaintenanceResult? _sleepResult;
   StoreConversationTurnResult? _conversationTurnResult;
+  ProcessTurnResult? _processTurnResult;
   BridgeGraphProjection? _graphProjection;
   String? _selectedGraphNodeId;
   ChatCompletionResult? _withoutMemory;
   ChatCompletionResult? _withMemory;
+
+  static String _newConversationId() {
+    return 'demo-${DateTime.now().microsecondsSinceEpoch}';
+  }
+
+  DemoPersona get _selectedPersona => demoPersonaById(_selectedPersonaId);
+
+  String get _projectContext =>
+      '${_selectedPersona.projectContext}:$_conversationId';
 
   @override
   void dispose() {
@@ -262,13 +279,6 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       });
       return;
     }
-    if (memoryBank.isEmpty) {
-      setState(() {
-        _error = 'Add memory text before running the comparison.';
-      });
-      return;
-    }
-
     setState(() {
       _isRunning = true;
       _error = null;
@@ -276,16 +286,22 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _recallResult = null;
       _sleepResult = null;
       _conversationTurnResult = null;
+      _processTurnResult = null;
       _withoutMemory = null;
       _withMemory = null;
     });
 
     try {
       final memoryStore = await _ensureMemoryStore();
-      final ingestResult = await memoryStore.replaceMemoryBank(memoryBank);
-      final sleepResult =
-          _runSleepMaintenance ? await memoryStore.runSleepMaintenance() : null;
-      final recallResult = await memoryStore.recallForPrompt(userPrompt);
+      final ingestResult = memoryBank.isEmpty
+          ? null
+          : await memoryStore.replaceMemoryBank(memoryBank);
+      final nextTurnIndex = _turnIndex + 1;
+      final preTurnResult = await memoryStore.processTurn(
+        userPrompt,
+        turnId: nextTurnIndex,
+        projectContext: _projectContext,
+      );
 
       final uri = resolveChatCompletionsUri(endpoint);
       final apiKey = _apiKeyController.text.trim();
@@ -303,7 +319,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       final withMemoryMessages = buildChatMessages(
         systemPrompt: systemPrompt,
         userPrompt: userPrompt,
-        memoryContext: recallResult.context,
+        memoryContext: preTurnResult.contextText,
       );
 
       final responses = await Future.wait([
@@ -325,13 +341,14 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
         ),
       ]);
 
-      final nextTurnIndex = _turnIndex + 1;
-      final conversationTurnResult = await memoryStore.storeConversationTurn(
-        conversationId: _conversationId,
-        turnIndex: nextTurnIndex,
-        userMessage: userPrompt,
-        assistantMessage: responses[1].content,
+      final processTurnResult = await memoryStore.processTurn(
+        userPrompt,
+        assistantResponse: responses[1].content,
+        turnId: nextTurnIndex,
+        projectContext: _projectContext,
       );
+      final sleepResult =
+          _runSleepMaintenance ? await memoryStore.runSleepMaintenance() : null;
       final count = await memoryStore.memoryCount();
       final graph = await _loadGraphProjection(memoryStore);
 
@@ -343,13 +360,14 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
         _databasePath = memoryStore.databasePath;
         _memoryCount = count;
         _ingestResult = ingestResult;
-        _recallResult = recallResult;
+        _recallResult = null;
         _sleepResult = sleepResult;
-        _conversationTurnResult = conversationTurnResult;
+        _conversationTurnResult = null;
+        _processTurnResult = processTurnResult;
         _graphProjection = graph;
         _selectedGraphNodeId = _selectedNodeAfterRefresh(
           graph,
-          preferredNodeId: conversationTurnResult.assistantMemoryId,
+          preferredNodeId: processTurnResult.episodicId,
         );
         _withoutMemory = responses[0];
         _withMemory = responses[1];
@@ -372,6 +390,10 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
 
   void _loadSample() {
     setState(() {
+      _selectedPersonaId = 'dinner_planner';
+      _scenarioStepIndex = 0;
+      _conversationId = _newConversationId();
+      _turnIndex = 0;
       _systemController.text = defaultSystemPrompt;
       _promptController.text = sampleUserPrompt;
       _memoryController.text = sampleMemoryBank;
@@ -379,6 +401,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _recallResult = null;
       _sleepResult = null;
       _conversationTurnResult = null;
+      _processTurnResult = null;
       _withoutMemory = null;
       _withMemory = null;
       _error = null;
@@ -395,6 +418,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _recallResult = null;
       _sleepResult = null;
       _conversationTurnResult = null;
+      _processTurnResult = null;
       _withoutMemory = null;
       _withMemory = null;
       _error = null;
@@ -409,7 +433,66 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _recallResult = null;
       _sleepResult = null;
       _conversationTurnResult = null;
+      _processTurnResult = null;
       _error = null;
+    });
+  }
+
+  void _selectPersona(String personaId) {
+    final persona = demoPersonaById(personaId);
+    final firstPrompt = persona.scenario.steps.isEmpty
+        ? ''
+        : persona.scenario.steps.first.userPrompt;
+    setState(() {
+      _selectedPersonaId = persona.id;
+      _scenarioStepIndex = 0;
+      _conversationId = _newConversationId();
+      _turnIndex = 0;
+      _memoryController.text = persona.memoryBank;
+      _promptController.text = firstPrompt;
+      _withoutMemory = null;
+      _withMemory = null;
+      _ingestResult = null;
+      _recallResult = null;
+      _sleepResult = null;
+      _conversationTurnResult = null;
+      _processTurnResult = null;
+      _graphProjection = null;
+      _selectedGraphNodeId = null;
+      _error = null;
+    });
+  }
+
+  Future<void> _sendScenarioStep() async {
+    if (_isRunning) {
+      return;
+    }
+    final persona = _selectedPersona;
+    if (persona.scenario.steps.isEmpty) {
+      return;
+    }
+    final stepIndex = _scenarioStepIndex.clamp(
+      0,
+      persona.scenario.steps.length - 1,
+    );
+    final step = persona.scenario.steps[stepIndex];
+    setState(() {
+      if (step.startsNewSession) {
+        _conversationId = _newConversationId();
+        _turnIndex = 0;
+        _withoutMemory = null;
+        _withMemory = null;
+      }
+      _promptController.text = step.userPrompt;
+    });
+
+    await _runComparison();
+    if (!mounted || _error != null) {
+      return;
+    }
+    setState(() {
+      _scenarioStepIndex =
+          (_scenarioStepIndex + 1) % persona.scenario.steps.length;
     });
   }
 
@@ -468,6 +551,14 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  _ScenarioSection(
+                    persona: _selectedPersona,
+                    stepIndex: _scenarioStepIndex,
+                    isRunning: _isRunning,
+                    onPersonaChanged: _selectPersona,
+                    onSendStep: _sendScenarioStep,
+                  ),
+                  const SizedBox(height: 16),
                   _PromptSection(
                     systemController: _systemController,
                     promptController: _promptController,
@@ -502,6 +593,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
                     recallResult: _recallResult,
                     sleepResult: _sleepResult,
                     conversationTurnResult: _conversationTurnResult,
+                    processTurnResult: _processTurnResult,
                     graphProjection: _graphProjection,
                     selectedGraphNodeId: _selectedGraphNodeId,
                     isMaintaining: _isMaintaining,
@@ -683,6 +775,178 @@ class _SettingsSection extends StatelessWidget {
   }
 }
 
+class _ScenarioSection extends StatelessWidget {
+  const _ScenarioSection({
+    required this.persona,
+    required this.stepIndex,
+    required this.isRunning,
+    required this.onPersonaChanged,
+    required this.onSendStep,
+  });
+
+  final DemoPersona persona;
+  final int stepIndex;
+  final bool isRunning;
+  final ValueChanged<String> onPersonaChanged;
+  final VoidCallback onSendStep;
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = persona.scenario.steps;
+    final currentStep =
+        steps.isEmpty ? null : steps[stepIndex.clamp(0, steps.length - 1)];
+    return _Panel(
+      title: 'Guided scenarios',
+      icon: Icons.playlist_play,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 820;
+          final personaPicker = DropdownButtonFormField<String>(
+            initialValue: persona.id,
+            decoration: const InputDecoration(
+              labelText: 'Persona',
+              prefixIcon: Icon(Icons.person_search_outlined),
+            ),
+            items: [
+              for (final item in demoPersonas)
+                DropdownMenuItem<String>(
+                  value: item.id,
+                  child: Text(item.name),
+                ),
+            ],
+            onChanged: isRunning
+                ? null
+                : (value) {
+                    if (value != null) {
+                      onPersonaChanged(value);
+                    }
+                  },
+          );
+          final role = InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Role',
+              prefixIcon: Icon(Icons.badge_outlined),
+            ),
+            child: Text(persona.role),
+          );
+          final scenario = InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Scenario',
+              prefixIcon: Icon(Icons.route_outlined),
+            ),
+            child: Text(persona.scenario.name),
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isWide)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: personaPicker),
+                    const SizedBox(width: 12),
+                    Expanded(child: role),
+                    const SizedBox(width: 12),
+                    Expanded(child: scenario),
+                  ],
+                )
+              else ...[
+                personaPicker,
+                const SizedBox(height: 12),
+                role,
+                const SizedBox(height: 12),
+                scenario,
+              ],
+              if (currentStep != null) ...[
+                const SizedBox(height: 12),
+                _ScenarioStepPreview(
+                  step: currentStep,
+                  index: stepIndex + 1,
+                  count: steps.length,
+                ),
+              ],
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.icon(
+                  onPressed:
+                      isRunning || currentStep == null ? null : onSendStep,
+                  icon: isRunning
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_outlined),
+                  label: Text(isRunning ? 'Running step' : 'Send guided step'),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ScenarioStepPreview extends StatelessWidget {
+  const _ScenarioStepPreview({
+    required this.step,
+    required this.index,
+    required this.count,
+  });
+
+  final DemoScenarioStep step;
+  final int index;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _MetricChip(
+                  icon: Icons.format_list_numbered,
+                  label: 'Step $index of $count',
+                ),
+                if (step.startsNewSession)
+                  const _MetricChip(
+                    icon: Icons.fiber_new_outlined,
+                    label: 'New session',
+                  ),
+                Text(
+                  step.title,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SelectableText(step.userPrompt),
+            const SizedBox(height: 8),
+            Text(
+              step.expectedMemorySignal,
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PromptSection extends StatelessWidget {
   const _PromptSection({
     required this.systemController,
@@ -788,6 +1052,7 @@ class _NativeStatusPanel extends StatelessWidget {
     required this.recallResult,
     required this.sleepResult,
     required this.conversationTurnResult,
+    required this.processTurnResult,
     required this.graphProjection,
     required this.selectedGraphNodeId,
     required this.isMaintaining,
@@ -803,6 +1068,7 @@ class _NativeStatusPanel extends StatelessWidget {
   final RecallMemoryContextResult? recallResult;
   final BridgeSleepMaintenanceResult? sleepResult;
   final StoreConversationTurnResult? conversationTurnResult;
+  final ProcessTurnResult? processTurnResult;
   final BridgeGraphProjection? graphProjection;
   final String? selectedGraphNodeId;
   final bool isMaintaining;
@@ -817,6 +1083,7 @@ class _NativeStatusPanel extends StatelessWidget {
     final ingested = ingestResult;
     final sleep = sleepResult;
     final storedTurn = conversationTurnResult;
+    final processed = processTurnResult;
     final graph = graphProjection;
     final path = databasePath;
 
@@ -871,6 +1138,16 @@ class _NativeStatusPanel extends StatelessWidget {
                   icon: Icons.history,
                   label: 'Recent chat ${storedTurn.stored}',
                 ),
+              if (processed != null)
+                _MetricChip(
+                  icon: Icons.psychology_alt_outlined,
+                  label: 'Process stored ${processed.stored}',
+                ),
+              if (processed != null && processed.context.isNotEmpty)
+                _MetricChip(
+                  icon: Icons.manage_search,
+                  label: 'Process context ${processed.context.length}',
+                ),
               if (graph != null)
                 _MetricChip(
                   icon: Icons.account_tree_outlined,
@@ -909,7 +1186,11 @@ class _NativeStatusPanel extends StatelessWidget {
             const SizedBox(height: 10),
             SelectableText(path),
           ],
-          if (recalled != null && recalled.context.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          MemoryActivityView(result: processed),
+          if (processed == null &&
+              recalled != null &&
+              recalled.context.isNotEmpty) ...[
             const SizedBox(height: 12),
             SelectableText(recalled.context),
           ],
@@ -1143,6 +1424,10 @@ class _SdkContractFooter extends StatelessWidget {
         _MetricChip(
           icon: Icons.travel_explore,
           label: 'Graph depth ${config.depth}',
+        ),
+        const _MetricChip(
+          icon: Icons.psychology_alt_outlined,
+          label: 'API processTurn',
         ),
       ],
     );

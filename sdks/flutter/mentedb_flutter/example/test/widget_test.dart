@@ -8,7 +8,10 @@ void main() {
     expect(find.text('Connection'), findsOneWidget);
     expect(find.text('OpenRouter referer'), findsOneWidget);
     expect(find.text('OpenRouter app title'), findsOneWidget);
+    expect(find.text('Guided scenarios'), findsOneWidget);
+    expect(find.text('Synapse engineer'), findsOneWidget);
     expect(find.text('Memory bank'), findsOneWidget);
     expect(find.text('Run comparison'), findsOneWidget);
+    expect(find.text('Waiting for memory activity'), findsOneWidget);
   });
 }
