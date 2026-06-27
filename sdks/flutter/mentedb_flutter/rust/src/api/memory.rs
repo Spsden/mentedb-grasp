@@ -146,6 +146,67 @@ pub struct StoreConversationTurnResult {
     pub memory_count: u32,
 }
 
+/// Request used by the TypeScript-style low-level `store` API.
+#[derive(Debug, Clone)]
+pub struct StoreMemoryRequest {
+    pub handle: u32,
+    pub content: String,
+    pub memory_type: BridgeMemoryType,
+    pub embedding: Vec<f64>,
+    pub agent_id: Option<String>,
+    pub tags: Vec<String>,
+    pub flush: bool,
+}
+
+/// Request used by the TypeScript-style MQL `recall` API.
+#[derive(Debug, Clone)]
+pub struct RecallQueryRequest {
+    pub handle: u32,
+    pub query: String,
+}
+
+/// MQL recall result compatible with the TypeScript SDK shape.
+#[derive(Debug, Clone)]
+pub struct RecallResult {
+    pub text: String,
+    pub total_tokens: u32,
+    pub memory_count: u32,
+}
+
+/// Request used by the TypeScript-style vector `search` API.
+#[derive(Debug, Clone)]
+pub struct SearchMemoryRequest {
+    pub handle: u32,
+    pub embedding: Vec<f64>,
+    pub k: u32,
+}
+
+/// Vector search result compatible with the TypeScript SDK shape.
+#[derive(Debug, Clone)]
+pub struct SearchResult {
+    pub id: String,
+    pub score: f64,
+}
+
+/// Request used by the TypeScript-style `relate` API.
+#[derive(Debug, Clone)]
+pub struct RelateMemoriesRequest {
+    pub handle: u32,
+    pub source: String,
+    pub target: String,
+    pub edge_type: BridgeEdgeType,
+    pub weight: f64,
+    pub flush: bool,
+}
+
+/// Request used by the TypeScript-style `forget` API.
+#[derive(Debug, Clone)]
+pub struct ForgetMemoryRequest {
+    pub handle: u32,
+    pub memory_id: String,
+    pub flush: bool,
+}
+
 /// Request used to run the full MenteDB conversation pipeline.
 #[derive(Debug, Clone)]
 pub struct ProcessTurnRequest {
@@ -433,6 +494,138 @@ pub fn memory_count(handle: u32) -> Result<u32> {
     to_u32(db.memory_count(), "memory_count")
 }
 
+/// Store a single memory and return its UUID string.
+pub fn store_memory(request: StoreMemoryRequest) -> Result<String> {
+    let content = normalize_message(&request.content, "content")?;
+    let agent_id = match request.agent_id {
+        Some(value) if !value.trim().is_empty() => parse_agent_id(Some(&value))?,
+        _ => AgentId::nil(),
+    };
+    let session = get_session(request.handle)?;
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+    let embedding = if request.embedding.is_empty() {
+        db.embed_text(&content)?
+            .ok_or_else(|| anyhow!("database session has no embedding provider"))?
+    } else {
+        request
+            .embedding
+            .iter()
+            .map(|value| *value as f32)
+            .collect()
+    };
+    let mut node = MemoryNode::new(agent_id, request.memory_type.into(), content, embedding);
+    node.tags = request.tags;
+    let id = node.id;
+    db.store(node).context("failed to store memory")?;
+    if request.flush {
+        db.flush().context("failed to flush stored memory")?;
+    }
+    Ok(id.to_string())
+}
+
+/// Recall memories using an MQL query string.
+pub fn recall_query(request: RecallQueryRequest) -> Result<RecallResult> {
+    let query = request.query.trim();
+    if query.is_empty() {
+        bail!("query must not be empty");
+    }
+    let session = get_session(request.handle)?;
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+    let window = db.recall(query).context("failed to recall MQL query")?;
+    let text = window
+        .blocks
+        .iter()
+        .flat_map(|block| block.memories.iter())
+        .map(|memory| memory.memory.content.as_str())
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    let memory_count = window
+        .blocks
+        .iter()
+        .map(|block| block.memories.len())
+        .sum::<usize>();
+    Ok(RecallResult {
+        text,
+        total_tokens: to_u32(window.total_tokens, "total_tokens")?,
+        memory_count: to_u32(memory_count, "memory_count")?,
+    })
+}
+
+/// Vector similarity search returning the top-k results.
+pub fn search_memory(request: SearchMemoryRequest) -> Result<Vec<SearchResult>> {
+    let k = validate_positive_u32(request.k, "k must be greater than zero")? as usize;
+    if request.embedding.is_empty() {
+        bail!("embedding must not be empty");
+    }
+    let embedding = request
+        .embedding
+        .iter()
+        .map(|value| *value as f32)
+        .collect::<Vec<_>>();
+    let session = get_session(request.handle)?;
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+    let hits = db
+        .recall_similar(&embedding, k)
+        .context("failed to search memories")?;
+    Ok(hits
+        .into_iter()
+        .map(|(id, score)| SearchResult {
+            id: id.to_string(),
+            score: f64::from(score),
+        })
+        .collect())
+}
+
+/// Create a typed, weighted edge between two memories.
+pub fn relate_memories(request: RelateMemoriesRequest) -> Result<()> {
+    let source = MemoryId::from_str(request.source.trim()).context("invalid source memory id")?;
+    let target = MemoryId::from_str(request.target.trim()).context("invalid target memory id")?;
+    let session = get_session(request.handle)?;
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+    db.relate(MemoryEdge {
+        source,
+        target,
+        edge_type: request.edge_type.into(),
+        weight: request.weight as f32,
+        created_at: current_timestamp_micros(),
+        valid_from: None,
+        valid_until: None,
+        label: None,
+    })
+    .context("failed to relate memories")?;
+    if request.flush {
+        db.flush().context("failed to flush memory relation")?;
+    }
+    Ok(())
+}
+
+/// Remove a memory by ID.
+pub fn forget_memory(request: ForgetMemoryRequest) -> Result<()> {
+    let memory_id = MemoryId::from_str(request.memory_id.trim()).context("invalid memory id")?;
+    let session = get_session(request.handle)?;
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+    db.forget(memory_id).context("failed to forget memory")?;
+    if request.flush {
+        db.flush().context("failed to flush forgotten memory")?;
+    }
+    Ok(())
+}
+
 /// Store user text as real MenteDB memory nodes.
 pub fn ingest_memory_bank(request: IngestMemoryBankRequest) -> Result<IngestMemoryBankResult> {
     let source = normalize_source(&request.source)?;
@@ -650,7 +843,7 @@ pub fn process_turn(request: ProcessTurnRequest) -> Result<ProcessTurnResult> {
     let session = get_session(request.handle)?;
     let agent_id = match request.agent_id {
         Some(value) if !value.trim().is_empty() => Some(parse_agent_id(Some(&value))?.0),
-        _ => Some(session.agent_id.0),
+        _ => None,
     };
     let db = session
         .db
@@ -897,6 +1090,21 @@ impl From<EdgeType> for BridgeEdgeType {
             EdgeType::Supersedes => BridgeEdgeType::Supersedes,
             EdgeType::Derived => BridgeEdgeType::Derived,
             EdgeType::PartOf => BridgeEdgeType::PartOf,
+        }
+    }
+}
+
+impl From<BridgeEdgeType> for EdgeType {
+    fn from(value: BridgeEdgeType) -> Self {
+        match value {
+            BridgeEdgeType::Caused => EdgeType::Caused,
+            BridgeEdgeType::Before => EdgeType::Before,
+            BridgeEdgeType::Related => EdgeType::Related,
+            BridgeEdgeType::Contradicts => EdgeType::Contradicts,
+            BridgeEdgeType::Supports => EdgeType::Supports,
+            BridgeEdgeType::Supersedes => EdgeType::Supersedes,
+            BridgeEdgeType::Derived => EdgeType::Derived,
+            BridgeEdgeType::PartOf => EdgeType::PartOf,
         }
     }
 }
@@ -1429,5 +1637,84 @@ mod tests {
     fn chunking_uses_character_boundaries() {
         let chunks = chunk_memory_bank("abcd\néfghij", 4).expect("chunk text");
         assert_eq!(chunks, vec!["abcd", "éfgh", "ij"]);
+    }
+
+    #[test]
+    fn bridge_supports_typescript_style_low_level_api() {
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let opened = open_database(OpenDatabaseRequest {
+            path: temp_dir.path().join("memory").to_string_lossy().to_string(),
+            embedding_dimensions: 64,
+            agent_id: None,
+        })
+        .expect("open database");
+
+        let mut embedding_a = vec![0.0; 64];
+        embedding_a[0] = 1.0;
+        let mut embedding_b = vec![0.0; 64];
+        embedding_b[1] = 1.0;
+        let first = store_memory(StoreMemoryRequest {
+            handle: opened.handle,
+            content: "Flutter is the active mobile stack.".to_string(),
+            memory_type: BridgeMemoryType::Semantic,
+            embedding: embedding_a.clone(),
+            agent_id: None,
+            tags: vec!["sdk".to_string(), "flutter".to_string()],
+            flush: true,
+        })
+        .expect("store first memory");
+        let second = store_memory(StoreMemoryRequest {
+            handle: opened.handle,
+            content: "Supabase is used for selected sync flows.".to_string(),
+            memory_type: BridgeMemoryType::Semantic,
+            embedding: embedding_b,
+            agent_id: None,
+            tags: vec!["sdk".to_string(), "sync".to_string()],
+            flush: true,
+        })
+        .expect("store second memory");
+
+        let search = search_memory(SearchMemoryRequest {
+            handle: opened.handle,
+            embedding: embedding_a.clone(),
+            k: 5,
+        })
+        .expect("search memories");
+        assert!(search.iter().any(|hit| hit.id == first));
+
+        let recall = recall_query(RecallQueryRequest {
+            handle: opened.handle,
+            query: format!(
+                "RECALL memories NEAR [{}] LIMIT 10",
+                embedding_a
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        })
+        .expect("recall query");
+        assert!(recall.text.contains("Flutter"));
+        assert_eq!(recall.memory_count, 2);
+
+        relate_memories(RelateMemoriesRequest {
+            handle: opened.handle,
+            source: first.clone(),
+            target: second.clone(),
+            edge_type: BridgeEdgeType::Related,
+            weight: 0.7,
+            flush: true,
+        })
+        .expect("relate memories");
+
+        forget_memory(ForgetMemoryRequest {
+            handle: opened.handle,
+            memory_id: second,
+            flush: true,
+        })
+        .expect("forget memory");
+        assert_eq!(memory_count(opened.handle).expect("memory count"), 1);
+
+        close_database(opened.handle).expect("close database");
     }
 }

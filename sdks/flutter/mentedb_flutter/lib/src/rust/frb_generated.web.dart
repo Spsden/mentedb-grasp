@@ -30,6 +30,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  ForgetMemoryRequest dco_decode_box_autoadd_forget_memory_request(dynamic raw);
+
+  @protected
   GraphProjectionRequest dco_decode_box_autoadd_graph_projection_request(
       dynamic raw);
 
@@ -51,12 +54,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       dco_decode_box_autoadd_recall_memory_context_request(dynamic raw);
 
   @protected
+  RecallQueryRequest dco_decode_box_autoadd_recall_query_request(dynamic raw);
+
+  @protected
+  RelateMemoriesRequest dco_decode_box_autoadd_relate_memories_request(
+      dynamic raw);
+
+  @protected
   RunSleepMaintenanceRequest
       dco_decode_box_autoadd_run_sleep_maintenance_request(dynamic raw);
 
   @protected
+  SearchMemoryRequest dco_decode_box_autoadd_search_memory_request(dynamic raw);
+
+  @protected
   StoreConversationTurnRequest
       dco_decode_box_autoadd_store_conversation_turn_request(dynamic raw);
+
+  @protected
+  StoreMemoryRequest dco_decode_box_autoadd_store_memory_request(dynamic raw);
 
   @protected
   BridgeEdgeType dco_decode_bridge_edge_type(dynamic raw);
@@ -88,6 +104,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_f_32(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
+  ForgetMemoryRequest dco_decode_forget_memory_request(dynamic raw);
 
   @protected
   GraphProjectionRequest dco_decode_graph_projection_request(dynamic raw);
@@ -124,6 +146,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       dco_decode_list_bridge_sleep_maintenance_issue(dynamic raw);
 
   @protected
+  Float64List dco_decode_list_prim_f_64_strict(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
@@ -145,6 +170,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   List<ProcessTurnStoredMemory> dco_decode_list_process_turn_stored_memory(
       dynamic raw);
+
+  @protected
+  List<SearchResult> dco_decode_list_search_result(dynamic raw);
 
   @protected
   OpenDatabaseRequest dco_decode_open_database_request(dynamic raw);
@@ -190,8 +218,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       dynamic raw);
 
   @protected
+  RecallQueryRequest dco_decode_recall_query_request(dynamic raw);
+
+  @protected
+  RecallResult dco_decode_recall_result(dynamic raw);
+
+  @protected
+  RelateMemoriesRequest dco_decode_relate_memories_request(dynamic raw);
+
+  @protected
   RunSleepMaintenanceRequest dco_decode_run_sleep_maintenance_request(
       dynamic raw);
+
+  @protected
+  SearchMemoryRequest dco_decode_search_memory_request(dynamic raw);
+
+  @protected
+  SearchResult dco_decode_search_result(dynamic raw);
 
   @protected
   StoreConversationTurnRequest dco_decode_store_conversation_turn_request(
@@ -200,6 +243,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   StoreConversationTurnResult dco_decode_store_conversation_turn_result(
       dynamic raw);
+
+  @protected
+  StoreMemoryRequest dco_decode_store_memory_request(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -218,6 +264,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  ForgetMemoryRequest sse_decode_box_autoadd_forget_memory_request(
+      SseDeserializer deserializer);
 
   @protected
   GraphProjectionRequest sse_decode_box_autoadd_graph_projection_request(
@@ -244,14 +294,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
+  RecallQueryRequest sse_decode_box_autoadd_recall_query_request(
+      SseDeserializer deserializer);
+
+  @protected
+  RelateMemoriesRequest sse_decode_box_autoadd_relate_memories_request(
+      SseDeserializer deserializer);
+
+  @protected
   RunSleepMaintenanceRequest
       sse_decode_box_autoadd_run_sleep_maintenance_request(
           SseDeserializer deserializer);
 
   @protected
+  SearchMemoryRequest sse_decode_box_autoadd_search_memory_request(
+      SseDeserializer deserializer);
+
+  @protected
   StoreConversationTurnRequest
       sse_decode_box_autoadd_store_conversation_turn_request(
           SseDeserializer deserializer);
+
+  @protected
+  StoreMemoryRequest sse_decode_box_autoadd_store_memory_request(
+      SseDeserializer deserializer);
 
   @protected
   BridgeEdgeType sse_decode_bridge_edge_type(SseDeserializer deserializer);
@@ -285,6 +351,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  ForgetMemoryRequest sse_decode_forget_memory_request(
+      SseDeserializer deserializer);
 
   @protected
   GraphProjectionRequest sse_decode_graph_projection_request(
@@ -325,6 +398,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
+  Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
@@ -346,6 +422,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ProcessTurnStoredMemory> sse_decode_list_process_turn_stored_memory(
+      SseDeserializer deserializer);
+
+  @protected
+  List<SearchResult> sse_decode_list_search_result(
       SseDeserializer deserializer);
 
   @protected
@@ -399,8 +479,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  RecallQueryRequest sse_decode_recall_query_request(
+      SseDeserializer deserializer);
+
+  @protected
+  RecallResult sse_decode_recall_result(SseDeserializer deserializer);
+
+  @protected
+  RelateMemoriesRequest sse_decode_relate_memories_request(
+      SseDeserializer deserializer);
+
+  @protected
   RunSleepMaintenanceRequest sse_decode_run_sleep_maintenance_request(
       SseDeserializer deserializer);
+
+  @protected
+  SearchMemoryRequest sse_decode_search_memory_request(
+      SseDeserializer deserializer);
+
+  @protected
+  SearchResult sse_decode_search_result(SseDeserializer deserializer);
 
   @protected
   StoreConversationTurnRequest sse_decode_store_conversation_turn_request(
@@ -408,6 +506,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StoreConversationTurnResult sse_decode_store_conversation_turn_result(
+      SseDeserializer deserializer);
+
+  @protected
+  StoreMemoryRequest sse_decode_store_memory_request(
       SseDeserializer deserializer);
 
   @protected
@@ -428,6 +530,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_forget_memory_request(
+      ForgetMemoryRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_graph_projection_request(
@@ -454,12 +560,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       RecallMemoryContextRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_recall_query_request(
+      RecallQueryRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_relate_memories_request(
+      RelateMemoriesRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_run_sleep_maintenance_request(
       RunSleepMaintenanceRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_search_memory_request(
+      SearchMemoryRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_store_conversation_turn_request(
       StoreConversationTurnRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_store_memory_request(
+      StoreMemoryRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_bridge_edge_type(
@@ -495,6 +617,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_forget_memory_request(
+      ForgetMemoryRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_graph_projection_request(
@@ -534,6 +663,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       List<BridgeSleepMaintenanceIssue> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_prim_f_64_strict(
+      Float64List self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
 
@@ -556,6 +689,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_process_turn_stored_memory(
       List<ProcessTurnStoredMemory> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_search_result(
+      List<SearchResult> self, SseSerializer serializer);
 
   @protected
   void sse_encode_open_database_request(
@@ -609,8 +746,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       RecallMemoryContextResult self, SseSerializer serializer);
 
   @protected
+  void sse_encode_recall_query_request(
+      RecallQueryRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_recall_result(RecallResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_relate_memories_request(
+      RelateMemoriesRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_run_sleep_maintenance_request(
       RunSleepMaintenanceRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_search_memory_request(
+      SearchMemoryRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_search_result(SearchResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_store_conversation_turn_request(
@@ -619,6 +774,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_store_conversation_turn_result(
       StoreConversationTurnResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_store_memory_request(
+      StoreMemoryRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);

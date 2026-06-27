@@ -88,15 +88,50 @@ void main() {
     final db = await MenteDB.open(databasePath, embeddingDimensions: 64);
     addTearDown(db.close);
 
+    final flutterEmbedding = List<double>.filled(64, 0);
+    flutterEmbedding[0] = 1;
+    final supabaseEmbedding = List<double>.filled(64, 0);
+    supabaseEmbedding[1] = 1;
+
+    final flutterId = await db.store(
+      StoreOptions(
+        content: 'The active mobile memory app is Flutter and Dart.',
+        memoryType: MemoryType.semantic,
+        embedding: flutterEmbedding,
+        tags: const ['sdk', 'flutter'],
+      ),
+    );
+    final supabaseId = await db.store(
+      StoreOptions(
+        content: 'Synapse syncs selected local memory state to Supabase.',
+        memoryType: MemoryType.semantic,
+        embedding: supabaseEmbedding,
+        tags: const ['sdk', 'sync'],
+      ),
+    );
+
+    final hits = await db.search(flutterEmbedding, 5);
+    expect(hits.map((hit) => hit.id), contains(flutterId));
+
+    final recalled = await db.recall(
+      'RECALL memories NEAR [${flutterEmbedding.join(', ')}] LIMIT 10',
+    );
+    expect(recalled.text, contains('Flutter'));
+    expect(recalled.memoryCount, greaterThanOrEqualTo(2));
+
+    await db.relate(flutterId, supabaseId, EdgeType.related, 0.7);
+
     final result = await db.processTurn(
       'I prefer Flutter for mobile memory apps.',
-      assistantResponse: 'Noted, I will keep Flutter in mind.',
-      turnId: 1,
-      projectContext: 'facade_test',
+      'Noted, I will keep Flutter in mind.',
+      1,
+      'facade_test',
     );
 
     expect(result.stored, 1);
     expect(result.storedIds, isNotEmpty);
     expect(result.memoryCount, greaterThanOrEqualTo(1));
+
+    await db.forget(supabaseId);
   });
 }

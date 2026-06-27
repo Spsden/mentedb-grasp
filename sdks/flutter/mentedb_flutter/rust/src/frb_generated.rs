@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.2";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1720913295;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1718831523;
 
 // Section: executor
 
@@ -110,6 +110,42 @@ fn wire__crate__api__memory__flush_database_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::memory::flush_database(api_handle)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__memory__forget_memory_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "forget_memory",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_request =
+                <crate::api::memory::ForgetMemoryRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::memory::forget_memory(api_request)?;
                         Ok(output_ok)
                     })(),
                 )
@@ -366,6 +402,78 @@ fn wire__crate__api__memory__recall_memory_context_impl(
         },
     )
 }
+fn wire__crate__api__memory__recall_query_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "recall_query",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_request =
+                <crate::api::memory::RecallQueryRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::memory::recall_query(api_request)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__memory__relate_memories_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "relate_memories",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_request =
+                <crate::api::memory::RelateMemoriesRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::memory::relate_memories(api_request)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__memory__run_sleep_maintenance_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -402,6 +510,42 @@ fn wire__crate__api__memory__run_sleep_maintenance_impl(
         },
     )
 }
+fn wire__crate__api__memory__search_memory_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "search_memory",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_request =
+                <crate::api::memory::SearchMemoryRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::memory::search_memory(api_request)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__memory__store_conversation_turn_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -431,6 +575,42 @@ fn wire__crate__api__memory__store_conversation_turn_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::memory::store_conversation_turn(api_request)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__memory__store_memory_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "store_memory",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_request =
+                <crate::api::memory::StoreMemoryRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::memory::store_memory(api_request)?;
                         Ok(output_ok)
                     })(),
                 )
@@ -658,6 +838,27 @@ impl SseDecode for f32 {
     }
 }
 
+impl SseDecode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_f64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for crate::api::memory::ForgetMemoryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_handle = <u32>::sse_decode(deserializer);
+        let mut var_memoryId = <String>::sse_decode(deserializer);
+        let mut var_flush = <bool>::sse_decode(deserializer);
+        return crate::api::memory::ForgetMemoryRequest {
+            handle: var_handle,
+            memory_id: var_memoryId,
+            flush: var_flush,
+        };
+    }
+}
+
 impl SseDecode for crate::api::memory::GraphProjectionRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -800,6 +1001,18 @@ impl SseDecode for Vec<crate::api::memory::BridgeSleepMaintenanceIssue> {
     }
 }
 
+impl SseDecode for Vec<f64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<f64>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<u8> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -875,6 +1088,18 @@ impl SseDecode for Vec<crate::api::memory::ProcessTurnStoredMemory> {
             ans_.push(<crate::api::memory::ProcessTurnStoredMemory>::sse_decode(
                 deserializer,
             ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::memory::SearchResult> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::memory::SearchResult>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -1138,6 +1363,52 @@ impl SseDecode for crate::api::memory::RecallMemoryContextResult {
     }
 }
 
+impl SseDecode for crate::api::memory::RecallQueryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_handle = <u32>::sse_decode(deserializer);
+        let mut var_query = <String>::sse_decode(deserializer);
+        return crate::api::memory::RecallQueryRequest {
+            handle: var_handle,
+            query: var_query,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::RecallResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_text = <String>::sse_decode(deserializer);
+        let mut var_totalTokens = <u32>::sse_decode(deserializer);
+        let mut var_memoryCount = <u32>::sse_decode(deserializer);
+        return crate::api::memory::RecallResult {
+            text: var_text,
+            total_tokens: var_totalTokens,
+            memory_count: var_memoryCount,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::RelateMemoriesRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_handle = <u32>::sse_decode(deserializer);
+        let mut var_source = <String>::sse_decode(deserializer);
+        let mut var_target = <String>::sse_decode(deserializer);
+        let mut var_edgeType = <crate::api::memory::BridgeEdgeType>::sse_decode(deserializer);
+        let mut var_weight = <f64>::sse_decode(deserializer);
+        let mut var_flush = <bool>::sse_decode(deserializer);
+        return crate::api::memory::RelateMemoriesRequest {
+            handle: var_handle,
+            source: var_source,
+            target: var_target,
+            edge_type: var_edgeType,
+            weight: var_weight,
+            flush: var_flush,
+        };
+    }
+}
+
 impl SseDecode for crate::api::memory::RunSleepMaintenanceRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1162,6 +1433,32 @@ impl SseDecode for crate::api::memory::RunSleepMaintenanceRequest {
             consolidation_min_cluster_size: var_consolidationMinClusterSize,
             consolidation_similarity_threshold: var_consolidationSimilarityThreshold,
             link_entities: var_linkEntities,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::SearchMemoryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_handle = <u32>::sse_decode(deserializer);
+        let mut var_embedding = <Vec<f64>>::sse_decode(deserializer);
+        let mut var_k = <u32>::sse_decode(deserializer);
+        return crate::api::memory::SearchMemoryRequest {
+            handle: var_handle,
+            embedding: var_embedding,
+            k: var_k,
+        };
+    }
+}
+
+impl SseDecode for crate::api::memory::SearchResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_score = <f64>::sse_decode(deserializer);
+        return crate::api::memory::SearchResult {
+            id: var_id,
+            score: var_score,
         };
     }
 }
@@ -1204,6 +1501,28 @@ impl SseDecode for crate::api::memory::StoreConversationTurnResult {
     }
 }
 
+impl SseDecode for crate::api::memory::StoreMemoryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_handle = <u32>::sse_decode(deserializer);
+        let mut var_content = <String>::sse_decode(deserializer);
+        let mut var_memoryType = <crate::api::memory::BridgeMemoryType>::sse_decode(deserializer);
+        let mut var_embedding = <Vec<f64>>::sse_decode(deserializer);
+        let mut var_agentId = <Option<String>>::sse_decode(deserializer);
+        let mut var_tags = <Vec<String>>::sse_decode(deserializer);
+        let mut var_flush = <bool>::sse_decode(deserializer);
+        return crate::api::memory::StoreMemoryRequest {
+            handle: var_handle,
+            content: var_content,
+            memory_type: var_memoryType,
+            embedding: var_embedding,
+            agent_id: var_agentId,
+            tags: var_tags,
+            flush: var_flush,
+        };
+    }
+}
+
 impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1234,24 +1553,29 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
         1 => wire__crate__api__memory__close_database_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__memory__flush_database_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__memory__graph_projection_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__memory__ingest_memory_bank_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__memory__init_app_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__memory__memory_count_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__memory__open_database_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__memory__process_turn_impl(port, ptr, rust_vec_len, data_len),
-        9 => {
+        3 => wire__crate__api__memory__forget_memory_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__memory__graph_projection_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__memory__ingest_memory_bank_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__memory__init_app_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__memory__memory_count_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__memory__open_database_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__memory__process_turn_impl(port, ptr, rust_vec_len, data_len),
+        10 => {
             wire__crate__api__memory__recall_memory_context_impl(port, ptr, rust_vec_len, data_len)
         }
-        10 => {
+        11 => wire__crate__api__memory__recall_query_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__memory__relate_memories_impl(port, ptr, rust_vec_len, data_len),
+        13 => {
             wire__crate__api__memory__run_sleep_maintenance_impl(port, ptr, rust_vec_len, data_len)
         }
-        11 => wire__crate__api__memory__store_conversation_turn_impl(
+        14 => wire__crate__api__memory__search_memory_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__memory__store_conversation_turn_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
+        16 => wire__crate__api__memory__store_memory_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1484,6 +1808,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::BridgeSleepMaintenanc
     for crate::api::memory::BridgeSleepMaintenanceResult
 {
     fn into_into_dart(self) -> crate::api::memory::BridgeSleepMaintenanceResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::ForgetMemoryRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.handle.into_into_dart().into_dart(),
+            self.memory_id.into_into_dart().into_dart(),
+            self.flush.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::ForgetMemoryRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::ForgetMemoryRequest>
+    for crate::api::memory::ForgetMemoryRequest
+{
+    fn into_into_dart(self) -> crate::api::memory::ForgetMemoryRequest {
         self
     }
 }
@@ -1844,6 +2190,74 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::RecallMemoryContextRe
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::RecallQueryRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.handle.into_into_dart().into_dart(),
+            self.query.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::RecallQueryRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::RecallQueryRequest>
+    for crate::api::memory::RecallQueryRequest
+{
+    fn into_into_dart(self) -> crate::api::memory::RecallQueryRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::RecallResult {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.text.into_into_dart().into_dart(),
+            self.total_tokens.into_into_dart().into_dart(),
+            self.memory_count.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::RecallResult
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::RecallResult>
+    for crate::api::memory::RecallResult
+{
+    fn into_into_dart(self) -> crate::api::memory::RecallResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::RelateMemoriesRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.handle.into_into_dart().into_dart(),
+            self.source.into_into_dart().into_dart(),
+            self.target.into_into_dart().into_dart(),
+            self.edge_type.into_into_dart().into_dart(),
+            self.weight.into_into_dart().into_dart(),
+            self.flush.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::RelateMemoriesRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::RelateMemoriesRequest>
+    for crate::api::memory::RelateMemoriesRequest
+{
+    fn into_into_dart(self) -> crate::api::memory::RelateMemoriesRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::memory::RunSleepMaintenanceRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1873,6 +2287,49 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::RunSleepMaintenanceRe
     for crate::api::memory::RunSleepMaintenanceRequest
 {
     fn into_into_dart(self) -> crate::api::memory::RunSleepMaintenanceRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::SearchMemoryRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.handle.into_into_dart().into_dart(),
+            self.embedding.into_into_dart().into_dart(),
+            self.k.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::SearchMemoryRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::SearchMemoryRequest>
+    for crate::api::memory::SearchMemoryRequest
+{
+    fn into_into_dart(self) -> crate::api::memory::SearchMemoryRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::SearchResult {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.score.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::SearchResult
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::SearchResult>
+    for crate::api::memory::SearchResult
+{
+    fn into_into_dart(self) -> crate::api::memory::SearchResult {
         self
     }
 }
@@ -1922,6 +2379,32 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::StoreConversationTurn
     for crate::api::memory::StoreConversationTurnResult
 {
     fn into_into_dart(self) -> crate::api::memory::StoreConversationTurnResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::memory::StoreMemoryRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.handle.into_into_dart().into_dart(),
+            self.content.into_into_dart().into_dart(),
+            self.memory_type.into_into_dart().into_dart(),
+            self.embedding.into_into_dart().into_dart(),
+            self.agent_id.into_into_dart().into_dart(),
+            self.tags.into_into_dart().into_dart(),
+            self.flush.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::memory::StoreMemoryRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::memory::StoreMemoryRequest>
+    for crate::api::memory::StoreMemoryRequest
+{
+    fn into_into_dart(self) -> crate::api::memory::StoreMemoryRequest {
         self
     }
 }
@@ -2083,6 +2566,22 @@ impl SseEncode for f32 {
     }
 }
 
+impl SseEncode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::api::memory::ForgetMemoryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.handle, serializer);
+        <String>::sse_encode(self.memory_id, serializer);
+        <bool>::sse_encode(self.flush, serializer);
+    }
+}
+
 impl SseEncode for crate::api::memory::GraphProjectionRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2184,6 +2683,16 @@ impl SseEncode for Vec<crate::api::memory::BridgeSleepMaintenanceIssue> {
     }
 }
 
+impl SseEncode for Vec<f64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <f64>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<u8> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2240,6 +2749,16 @@ impl SseEncode for Vec<crate::api::memory::ProcessTurnStoredMemory> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::memory::ProcessTurnStoredMemory>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::memory::SearchResult> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::memory::SearchResult>::sse_encode(item, serializer);
         }
     }
 }
@@ -2413,6 +2932,35 @@ impl SseEncode for crate::api::memory::RecallMemoryContextResult {
     }
 }
 
+impl SseEncode for crate::api::memory::RecallQueryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.handle, serializer);
+        <String>::sse_encode(self.query, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::RecallResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.text, serializer);
+        <u32>::sse_encode(self.total_tokens, serializer);
+        <u32>::sse_encode(self.memory_count, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::RelateMemoriesRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.handle, serializer);
+        <String>::sse_encode(self.source, serializer);
+        <String>::sse_encode(self.target, serializer);
+        <crate::api::memory::BridgeEdgeType>::sse_encode(self.edge_type, serializer);
+        <f64>::sse_encode(self.weight, serializer);
+        <bool>::sse_encode(self.flush, serializer);
+    }
+}
+
 impl SseEncode for crate::api::memory::RunSleepMaintenanceRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2426,6 +2974,23 @@ impl SseEncode for crate::api::memory::RunSleepMaintenanceRequest {
         <u32>::sse_encode(self.consolidation_min_cluster_size, serializer);
         <f32>::sse_encode(self.consolidation_similarity_threshold, serializer);
         <bool>::sse_encode(self.link_entities, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::SearchMemoryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.handle, serializer);
+        <Vec<f64>>::sse_encode(self.embedding, serializer);
+        <u32>::sse_encode(self.k, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::SearchResult {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <f64>::sse_encode(self.score, serializer);
     }
 }
 
@@ -2449,6 +3014,19 @@ impl SseEncode for crate::api::memory::StoreConversationTurnResult {
         <String>::sse_encode(self.user_memory_id, serializer);
         <String>::sse_encode(self.assistant_memory_id, serializer);
         <u32>::sse_encode(self.memory_count, serializer);
+    }
+}
+
+impl SseEncode for crate::api::memory::StoreMemoryRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.handle, serializer);
+        <String>::sse_encode(self.content, serializer);
+        <crate::api::memory::BridgeMemoryType>::sse_encode(self.memory_type, serializer);
+        <Vec<f64>>::sse_encode(self.embedding, serializer);
+        <Option<String>>::sse_encode(self.agent_id, serializer);
+        <Vec<String>>::sse_encode(self.tags, serializer);
+        <bool>::sse_encode(self.flush, serializer);
     }
 }
 

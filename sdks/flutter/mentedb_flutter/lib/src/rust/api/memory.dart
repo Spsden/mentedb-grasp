@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `add_conversation_metadata`, `append_chunk_line`, `bridge_context_item`, `bridge_memory_type_label`, `bridge_process_turn_result`, `bridge_stored_memory`, `build_embedded_memory`, `chunk_memory_bank`, `clear_source_memories`, `current_timestamp_micros`, `format_context`, `format_process_turn_context`, `from_core`, `get_session`, `get`, `infer_memory_scope`, `insert`, `lease_busy`, `normalize_database_path`, `normalize_message`, `normalize_source`, `parse_agent_id`, `registry`, `remove`, `split_long_line`, `to_i64_u64`, `to_i64`, `to_u32`, `validate_positive_u32`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DbSession`, `SessionRegistry`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`
 // These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 /// Open or create a MenteDB database and return a process-local session handle.
@@ -27,6 +27,27 @@ Future<void> flushDatabase({required int handle}) =>
 /// Return the number of memories visible through a session.
 Future<int> memoryCount({required int handle}) =>
     RustLib.instance.api.crateApiMemoryMemoryCount(handle: handle);
+
+/// Store a single memory and return its UUID string.
+Future<String> storeMemory({required StoreMemoryRequest request}) =>
+    RustLib.instance.api.crateApiMemoryStoreMemory(request: request);
+
+/// Recall memories using an MQL query string.
+Future<RecallResult> recallQuery({required RecallQueryRequest request}) =>
+    RustLib.instance.api.crateApiMemoryRecallQuery(request: request);
+
+/// Vector similarity search returning the top-k results.
+Future<List<SearchResult>> searchMemory(
+        {required SearchMemoryRequest request}) =>
+    RustLib.instance.api.crateApiMemorySearchMemory(request: request);
+
+/// Create a typed, weighted edge between two memories.
+Future<void> relateMemories({required RelateMemoriesRequest request}) =>
+    RustLib.instance.api.crateApiMemoryRelateMemories(request: request);
+
+/// Remove a memory by ID.
+Future<void> forgetMemory({required ForgetMemoryRequest request}) =>
+    RustLib.instance.api.crateApiMemoryForgetMemory(request: request);
 
 /// Store user text as real MenteDB memory nodes.
 Future<IngestMemoryBankResult> ingestMemoryBank(
@@ -376,6 +397,31 @@ class BridgeSleepMaintenanceResult {
           enrichmentPending == other.enrichmentPending &&
           enrichmentCandidates == other.enrichmentCandidates &&
           issues == other.issues;
+}
+
+/// Request used by the TypeScript-style `forget` API.
+class ForgetMemoryRequest {
+  final int handle;
+  final String memoryId;
+  final bool flush;
+
+  const ForgetMemoryRequest({
+    required this.handle,
+    required this.memoryId,
+    required this.flush,
+  });
+
+  @override
+  int get hashCode => handle.hashCode ^ memoryId.hashCode ^ flush.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ForgetMemoryRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          memoryId == other.memoryId &&
+          flush == other.flush;
 }
 
 /// Request used to project the MenteDB graph for Flutter rendering.
@@ -1009,6 +1055,94 @@ class RecallMemoryContextResult {
           truncated == other.truncated;
 }
 
+/// Request used by the TypeScript-style MQL `recall` API.
+class RecallQueryRequest {
+  final int handle;
+  final String query;
+
+  const RecallQueryRequest({
+    required this.handle,
+    required this.query,
+  });
+
+  @override
+  int get hashCode => handle.hashCode ^ query.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecallQueryRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          query == other.query;
+}
+
+/// MQL recall result compatible with the TypeScript SDK shape.
+class RecallResult {
+  final String text;
+  final int totalTokens;
+  final int memoryCount;
+
+  const RecallResult({
+    required this.text,
+    required this.totalTokens,
+    required this.memoryCount,
+  });
+
+  @override
+  int get hashCode =>
+      text.hashCode ^ totalTokens.hashCode ^ memoryCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecallResult &&
+          runtimeType == other.runtimeType &&
+          text == other.text &&
+          totalTokens == other.totalTokens &&
+          memoryCount == other.memoryCount;
+}
+
+/// Request used by the TypeScript-style `relate` API.
+class RelateMemoriesRequest {
+  final int handle;
+  final String source;
+  final String target;
+  final BridgeEdgeType edgeType;
+  final double weight;
+  final bool flush;
+
+  const RelateMemoriesRequest({
+    required this.handle,
+    required this.source,
+    required this.target,
+    required this.edgeType,
+    required this.weight,
+    required this.flush,
+  });
+
+  @override
+  int get hashCode =>
+      handle.hashCode ^
+      source.hashCode ^
+      target.hashCode ^
+      edgeType.hashCode ^
+      weight.hashCode ^
+      flush.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RelateMemoriesRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          source == other.source &&
+          target == other.target &&
+          edgeType == other.edgeType &&
+          weight == other.weight &&
+          flush == other.flush;
+}
+
 /// Request used to run bounded sleep maintenance from Flutter background jobs.
 class RunSleepMaintenanceRequest {
   final int handle;
@@ -1064,6 +1198,53 @@ class RunSleepMaintenanceRequest {
           consolidationSimilarityThreshold ==
               other.consolidationSimilarityThreshold &&
           linkEntities == other.linkEntities;
+}
+
+/// Request used by the TypeScript-style vector `search` API.
+class SearchMemoryRequest {
+  final int handle;
+  final Float64List embedding;
+  final int k;
+
+  const SearchMemoryRequest({
+    required this.handle,
+    required this.embedding,
+    required this.k,
+  });
+
+  @override
+  int get hashCode => handle.hashCode ^ embedding.hashCode ^ k.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SearchMemoryRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          embedding == other.embedding &&
+          k == other.k;
+}
+
+/// Vector search result compatible with the TypeScript SDK shape.
+class SearchResult {
+  final String id;
+  final double score;
+
+  const SearchResult({
+    required this.id,
+    required this.score,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ score.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SearchResult &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          score == other.score;
 }
 
 /// Request used to persist a completed chat turn as recent episodic memory.
@@ -1153,4 +1334,48 @@ class StoreConversationTurnResult {
           userMemoryId == other.userMemoryId &&
           assistantMemoryId == other.assistantMemoryId &&
           memoryCount == other.memoryCount;
+}
+
+/// Request used by the TypeScript-style low-level `store` API.
+class StoreMemoryRequest {
+  final int handle;
+  final String content;
+  final BridgeMemoryType memoryType;
+  final Float64List embedding;
+  final String? agentId;
+  final List<String> tags;
+  final bool flush;
+
+  const StoreMemoryRequest({
+    required this.handle,
+    required this.content,
+    required this.memoryType,
+    required this.embedding,
+    this.agentId,
+    required this.tags,
+    required this.flush,
+  });
+
+  @override
+  int get hashCode =>
+      handle.hashCode ^
+      content.hashCode ^
+      memoryType.hashCode ^
+      embedding.hashCode ^
+      agentId.hashCode ^
+      tags.hashCode ^
+      flush.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StoreMemoryRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          content == other.content &&
+          memoryType == other.memoryType &&
+          embedding == other.embedding &&
+          agentId == other.agentId &&
+          tags == other.tags &&
+          flush == other.flush;
 }

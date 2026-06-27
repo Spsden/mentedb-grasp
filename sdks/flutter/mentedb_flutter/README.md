@@ -11,13 +11,29 @@ which mirrors the official TypeScript quick start around `processTurn`:
 final db = await MenteDB.open('./my-agent-memory');
 final result = await db.processTurn(
   'I prefer Flutter and Supabase for Synapse.',
-  assistantResponse: 'Noted, I will keep that stack in mind.',
-  turnId: 0,
-  projectContext: 'synapse',
+  'Noted, I will keep that stack in mind.',
+  0,
+  'synapse',
 );
 
 print(result.contextText);
 print(result.stored);
+
+final id = await db.store(
+  StoreOptions(
+    content: 'The deploy key rotates every 90 days',
+    memoryType: MemoryType.semantic,
+    embedding: embeddingFromYourModel,
+    tags: ['infra', 'security'],
+  ),
+);
+
+final hits = await db.search(queryEmbedding, 5);
+final ctx = await db.recall(
+  'RECALL memories NEAR [${queryEmbedding.join(', ')}] LIMIT 10',
+);
+await db.relate(id, otherId, EdgeType.supersedes);
+await db.forget(id);
 await db.close();
 ```
 
