@@ -37,6 +37,25 @@ void main() {
     expect(recall.memories, isNotEmpty);
     expect(recall.context, contains('Alex'));
 
+    final turn = await store.storeConversationTurn(
+      conversationId: 'integration_chat',
+      turnIndex: 1,
+      userMessage: 'What should I remember for Alex?',
+      assistantMessage: 'Avoid peanuts and suggest mushrooms.',
+    );
+    expect(turn.stored, 2);
+
+    final graph = await store.graphProjection(limit: 50);
+    expect(graph.nodes.length, greaterThanOrEqualTo(3));
+    expect(
+      graph.edges.any(
+        (edge) =>
+            edge.source == turn.userMemoryId &&
+            edge.target == turn.assistantMemoryId,
+      ),
+      isTrue,
+    );
+
     final sleep = await store.runSleepMaintenance(maxMemories: 100);
     expect(sleep.leaseAcquired, isTrue);
     expect(sleep.processedMemories, greaterThan(0));

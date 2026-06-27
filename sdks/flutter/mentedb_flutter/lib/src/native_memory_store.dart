@@ -5,10 +5,12 @@ import 'rust/frb_generated.dart';
 
 const defaultNativeEmbeddingDimensions = 384;
 const defaultNativeMemorySource = 'flutter_demo_memory_bank';
+const defaultNativeConversationSource = 'recent_chat';
 const defaultNativeMemoryChunkChars = 800;
 const defaultNativeRecallLimit = 8;
 const defaultNativeRecallContextChars = 2400;
 const defaultNativeSleepMaxMemories = 1000;
+const defaultNativeGraphLimit = 250;
 
 abstract interface class MenteDbMemoryStore {
   String get databasePath;
@@ -24,9 +26,17 @@ abstract interface class MenteDbMemoryStore {
 
   Future<bridge.RecallMemoryContextResult> recallForPrompt(
     String query, {
-    String source = defaultNativeMemorySource,
+    String? source,
     int limit = defaultNativeRecallLimit,
     int maxContextChars = defaultNativeRecallContextChars,
+  });
+
+  Future<bridge.StoreConversationTurnResult> storeConversationTurn({
+    required String conversationId,
+    required int turnIndex,
+    required String userMessage,
+    required String assistantMessage,
+    String source = defaultNativeConversationSource,
   });
 
   Future<bridge.BridgeSleepMaintenanceResult> runSleepMaintenance({
@@ -42,6 +52,16 @@ abstract interface class MenteDbMemoryStore {
   });
 
   Future<int> memoryCount();
+
+  Future<bridge.BridgeGraphProjection> graphProjection({
+    String? center,
+    int depth = 2,
+    int limit = defaultNativeGraphLimit,
+    int labelChars = 64,
+    int previewChars = 240,
+    bool includeInvalidated = false,
+    bool includeEdges = true,
+  });
 
   Future<void> close();
 }
@@ -111,7 +131,7 @@ final class RustMenteDbMemoryStore implements MenteDbMemoryStore {
   @override
   Future<bridge.RecallMemoryContextResult> recallForPrompt(
     String query, {
-    String source = defaultNativeMemorySource,
+    String? source,
     int limit = defaultNativeRecallLimit,
     int maxContextChars = defaultNativeRecallContextChars,
   }) {
@@ -123,6 +143,28 @@ final class RustMenteDbMemoryStore implements MenteDbMemoryStore {
         limit: limit,
         maxContextChars: maxContextChars,
         source: source,
+      ),
+    );
+  }
+
+  @override
+  Future<bridge.StoreConversationTurnResult> storeConversationTurn({
+    required String conversationId,
+    required int turnIndex,
+    required String userMessage,
+    required String assistantMessage,
+    String source = defaultNativeConversationSource,
+  }) {
+    _throwIfClosed();
+    return bridge.storeConversationTurn(
+      request: bridge.StoreConversationTurnRequest(
+        handle: _handle,
+        conversationId: conversationId,
+        turnIndex: turnIndex,
+        userMessage: userMessage,
+        assistantMessage: assistantMessage,
+        source: source,
+        flush: true,
       ),
     );
   }
@@ -160,6 +202,31 @@ final class RustMenteDbMemoryStore implements MenteDbMemoryStore {
   Future<int> memoryCount() {
     _throwIfClosed();
     return bridge.memoryCount(handle: _handle);
+  }
+
+  @override
+  Future<bridge.BridgeGraphProjection> graphProjection({
+    String? center,
+    int depth = 2,
+    int limit = defaultNativeGraphLimit,
+    int labelChars = 64,
+    int previewChars = 240,
+    bool includeInvalidated = false,
+    bool includeEdges = true,
+  }) {
+    _throwIfClosed();
+    return bridge.graphProjection(
+      request: bridge.GraphProjectionRequest(
+        handle: _handle,
+        center: center,
+        depth: depth,
+        limit: limit,
+        labelChars: labelChars,
+        previewChars: previewChars,
+        includeInvalidated: includeInvalidated,
+        includeEdges: includeEdges,
+      ),
+    );
   }
 
   @override

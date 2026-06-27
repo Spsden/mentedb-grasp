@@ -5,8 +5,9 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, anyhow, bail};
-use mentedb::prelude::{AgentId, MemoryId, MemoryNode};
-use mentedb::{MenteDb, SleepMaintenanceConfig};
+use mentedb::prelude::{AgentId, MemoryEdge, MemoryId, MemoryNode};
+use mentedb::{GraphProjectionConfig, MenteDb, SleepMaintenanceConfig};
+use mentedb_core::edge::EdgeType;
 use mentedb_core::memory::{AttributeValue, MemoryType};
 use mentedb_embedding::HashEmbeddingProvider;
 
@@ -113,6 +114,97 @@ pub struct RecallMemoryContextResult {
     pub context: String,
     pub memories: Vec<BridgeRecalledMemory>,
     pub truncated: bool,
+}
+
+/// Request used to persist a completed chat turn as recent episodic memory.
+#[derive(Debug, Clone)]
+pub struct StoreConversationTurnRequest {
+    /// Database handle returned by `open_database`.
+    pub handle: u32,
+    /// Stable conversation identifier chosen by the app.
+    pub conversation_id: String,
+    /// Monotonic turn index within the conversation.
+    pub turn_index: u32,
+    /// User message to persist.
+    pub user_message: String,
+    /// Assistant message to persist.
+    pub assistant_message: String,
+    /// Source tag used to retrieve or maintain recent chat separately.
+    pub source: String,
+    /// Flush indexes, graph, and storage after storing the turn.
+    pub flush: bool,
+}
+
+/// Summary returned after storing a completed chat turn.
+#[derive(Debug, Clone)]
+pub struct StoreConversationTurnResult {
+    pub stored: u32,
+    pub user_memory_id: String,
+    pub assistant_memory_id: String,
+    pub memory_count: u32,
+}
+
+/// Edge type accepted by the Flutter bridge.
+#[derive(Debug, Clone, Copy)]
+pub enum BridgeEdgeType {
+    Caused,
+    Before,
+    Related,
+    Contradicts,
+    Supports,
+    Supersedes,
+    Derived,
+    PartOf,
+}
+
+/// Request used to project the MenteDB graph for Flutter rendering.
+#[derive(Debug, Clone)]
+pub struct GraphProjectionRequest {
+    pub handle: u32,
+    pub center: Option<String>,
+    pub depth: u32,
+    pub limit: u32,
+    pub label_chars: u32,
+    pub preview_chars: u32,
+    pub include_invalidated: bool,
+    pub include_edges: bool,
+}
+
+/// Renderer-neutral graph projection returned through FRB.
+#[derive(Debug, Clone)]
+pub struct BridgeGraphProjection {
+    pub nodes: Vec<BridgeGraphProjectionNode>,
+    pub edges: Vec<BridgeGraphProjectionEdge>,
+    pub available_nodes: u32,
+    pub truncated: bool,
+}
+
+/// Memory node DTO for Flutter graph renderers.
+#[derive(Debug, Clone)]
+pub struct BridgeGraphProjectionNode {
+    pub id: String,
+    pub label: String,
+    pub preview: String,
+    pub memory_type: BridgeMemoryType,
+    pub salience: f32,
+    pub confidence: f32,
+    pub tags: Vec<String>,
+    pub created_at_micros: i64,
+    pub accessed_at_micros: i64,
+    pub valid_until_micros: Option<i64>,
+    pub embedding_dim: u32,
+}
+
+/// Graph edge DTO for Flutter graph renderers.
+#[derive(Debug, Clone)]
+pub struct BridgeGraphProjectionEdge {
+    pub source: String,
+    pub target: String,
+    pub edge_type: BridgeEdgeType,
+    pub weight: f32,
+    pub label: Option<String>,
+    pub created_at_micros: i64,
+    pub valid_until_micros: Option<i64>,
 }
 
 /// Request used to run bounded sleep maintenance from Flutter background jobs.
@@ -371,6 +463,157 @@ pub fn recall_memory_context(
     })
 }
 
+/// Store a completed user and assistant exchange as recent episodic memory.
+pub fn store_conversation_turn(
+    request: StoreConversationTurnRequest,
+) -> Result<StoreConversationTurnResult> {
+    let conversation_id = normalize_source(&request.conversation_id)?;
+    let source = normalize_source(&request.source)?;
+    let user_message = normalize_message(&request.user_message, "user_message")?;
+    let assistant_message = normalize_message(&request.assistant_message, "assistant_message")?;
+    let session = get_session(request.handle)?;
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+
+    let mut user_node = build_embedded_memory(
+        &db,
+        session.agent_id,
+        MemoryType::Episodic,
+        format!("User: {user_message}"),
+    )?;
+    add_conversation_metadata(
+        &mut user_node,
+        &source,
+        &conversation_id,
+        request.turn_index,
+        "user",
+    );
+
+    let mut assistant_node = build_embedded_memory(
+        &db,
+        session.agent_id,
+        MemoryType::Episodic,
+        format!("Assistant: {assistant_message}"),
+    )?;
+    add_conversation_metadata(
+        &mut assistant_node,
+        &source,
+        &conversation_id,
+        request.turn_index,
+        "assistant",
+    );
+
+    let user_memory_id = user_node.id;
+    let assistant_memory_id = assistant_node.id;
+    db.store_batch(vec![user_node, assistant_node])
+        .context("failed to store conversation turn")?;
+
+    let now = current_timestamp_micros();
+    db.relate(MemoryEdge {
+        source: user_memory_id,
+        target: assistant_memory_id,
+        edge_type: EdgeType::Before,
+        weight: 1.0,
+        created_at: now,
+        valid_from: None,
+        valid_until: None,
+        label: Some("assistant_response".to_string()),
+    })
+    .context("failed to relate conversation turn")?;
+
+    if request.flush {
+        db.flush().context("failed to flush conversation turn")?;
+    }
+
+    Ok(StoreConversationTurnResult {
+        stored: 2,
+        user_memory_id: user_memory_id.to_string(),
+        assistant_memory_id: assistant_memory_id.to_string(),
+        memory_count: to_u32(db.memory_count(), "memory_count")?,
+    })
+}
+
+/// Build a bounded graph projection from the native MenteDB graph.
+pub fn graph_projection(request: GraphProjectionRequest) -> Result<BridgeGraphProjection> {
+    let center = match request.center {
+        Some(value) if !value.trim().is_empty() => {
+            Some(MemoryId::from_str(value.trim()).context("invalid graph center memory id")?)
+        }
+        _ => None,
+    };
+    let config = GraphProjectionConfig {
+        center,
+        depth: validate_positive_u32(request.depth, "depth must be greater than zero")? as usize,
+        limit: validate_positive_u32(request.limit, "limit must be greater than zero")? as usize,
+        label_chars: validate_positive_u32(
+            request.label_chars,
+            "label_chars must be greater than zero",
+        )? as usize,
+        preview_chars: validate_positive_u32(
+            request.preview_chars,
+            "preview_chars must be greater than zero",
+        )? as usize,
+        include_invalidated: request.include_invalidated,
+        include_edges: request.include_edges,
+    };
+
+    let session = get_session(request.handle)?;
+    let db = session
+        .db
+        .lock()
+        .map_err(|_| anyhow!("database session lock was poisoned"))?;
+    let projection = db
+        .graph_projection(config)
+        .context("failed to build graph projection")?;
+
+    Ok(BridgeGraphProjection {
+        nodes: projection
+            .nodes
+            .into_iter()
+            .map(|node| {
+                Ok(BridgeGraphProjectionNode {
+                    id: node.id.to_string(),
+                    label: node.label,
+                    preview: node.preview,
+                    memory_type: node.memory_type.into(),
+                    salience: node.salience,
+                    confidence: node.confidence,
+                    tags: node.tags,
+                    created_at_micros: to_i64_u64(node.created_at, "created_at_micros")?,
+                    accessed_at_micros: to_i64_u64(node.accessed_at, "accessed_at_micros")?,
+                    valid_until_micros: node
+                        .valid_until
+                        .map(|value| to_i64_u64(value, "valid_until_micros"))
+                        .transpose()?,
+                    embedding_dim: to_u32(node.embedding_dim, "embedding_dim")?,
+                })
+            })
+            .collect::<Result<Vec<_>>>()?,
+        edges: projection
+            .edges
+            .into_iter()
+            .map(|edge| {
+                Ok(BridgeGraphProjectionEdge {
+                    source: edge.source.to_string(),
+                    target: edge.target.to_string(),
+                    edge_type: edge.edge_type.into(),
+                    weight: edge.weight,
+                    label: edge.label,
+                    created_at_micros: to_i64_u64(edge.created_at, "edge_created_at_micros")?,
+                    valid_until_micros: edge
+                        .valid_until
+                        .map(|value| to_i64_u64(value, "edge_valid_until_micros"))
+                        .transpose()?,
+                })
+            })
+            .collect::<Result<Vec<_>>>()?,
+        available_nodes: to_u32(projection.available_nodes, "available_nodes")?,
+        truncated: projection.truncated,
+    })
+}
+
 /// Run MenteDB sleep maintenance under the database lease.
 pub fn run_sleep_maintenance(
     request: RunSleepMaintenanceRequest,
@@ -498,6 +741,21 @@ impl From<MemoryType> for BridgeMemoryType {
     }
 }
 
+impl From<EdgeType> for BridgeEdgeType {
+    fn from(value: EdgeType) -> Self {
+        match value {
+            EdgeType::Caused => BridgeEdgeType::Caused,
+            EdgeType::Before => BridgeEdgeType::Before,
+            EdgeType::Related => BridgeEdgeType::Related,
+            EdgeType::Contradicts => BridgeEdgeType::Contradicts,
+            EdgeType::Supports => BridgeEdgeType::Supports,
+            EdgeType::Supersedes => BridgeEdgeType::Supersedes,
+            EdgeType::Derived => BridgeEdgeType::Derived,
+            EdgeType::PartOf => BridgeEdgeType::PartOf,
+        }
+    }
+}
+
 impl BridgeSleepMaintenanceResult {
     fn lease_busy() -> Self {
         Self {
@@ -580,6 +838,45 @@ fn clear_source_memories(db: &MenteDb, source: &str) -> Result<usize> {
             .with_context(|| format!("failed to replace memory {id}"))?;
     }
     Ok(ids.len())
+}
+
+fn build_embedded_memory(
+    db: &MenteDb,
+    agent_id: AgentId,
+    memory_type: MemoryType,
+    content: String,
+) -> Result<MemoryNode> {
+    let embedding = db
+        .embed_text(&content)?
+        .ok_or_else(|| anyhow!("database session has no embedding provider"))?;
+    Ok(MemoryNode::new(agent_id, memory_type, content, embedding))
+}
+
+fn add_conversation_metadata(
+    node: &mut MemoryNode,
+    source: &str,
+    conversation_id: &str,
+    turn_index: u32,
+    role: &str,
+) {
+    node.tags.push("recent_chat".to_string());
+    node.tags.push(source.to_string());
+    node.tags.push(format!("conversation:{conversation_id}"));
+    node.tags.push(format!("role:{role}"));
+    node.attributes.insert(
+        "source".to_string(),
+        AttributeValue::String(source.to_string()),
+    );
+    node.attributes.insert(
+        "conversation_id".to_string(),
+        AttributeValue::String(conversation_id.to_string()),
+    );
+    node.attributes.insert(
+        "turn_index".to_string(),
+        AttributeValue::Integer(i64::from(turn_index)),
+    );
+    node.attributes
+        .insert("role".to_string(), AttributeValue::String(role.to_string()));
 }
 
 fn chunk_memory_bank(text: &str, max_chunk_chars: usize) -> Result<Vec<String>> {
@@ -680,6 +977,14 @@ fn normalize_source(source: &str) -> Result<String> {
     Ok(trimmed.to_string())
 }
 
+fn normalize_message(message: &str, field: &str) -> Result<String> {
+    let trimmed = message.trim();
+    if trimmed.is_empty() {
+        bail!("{field} must not be empty");
+    }
+    Ok(trimmed.to_string())
+}
+
 fn parse_agent_id(agent_id: Option<&str>) -> Result<AgentId> {
     match agent_id.map(str::trim).filter(|value| !value.is_empty()) {
         Some(value) => {
@@ -753,6 +1058,40 @@ mod tests {
         assert!(!recall.context.is_empty());
         assert_eq!(recall.memories.len(), 1);
 
+        let turn = store_conversation_turn(StoreConversationTurnRequest {
+            handle: opened.handle,
+            conversation_id: "test_conversation".to_string(),
+            turn_index: 1,
+            user_message: "What should I cook for Alex?".to_string(),
+            assistant_message: "Avoid peanuts and consider mushrooms.".to_string(),
+            source: "recent_chat".to_string(),
+            flush: true,
+        })
+        .expect("store conversation turn");
+        assert_eq!(turn.stored, 2);
+        assert_eq!(turn.memory_count, 3);
+
+        let graph = graph_projection(GraphProjectionRequest {
+            handle: opened.handle,
+            center: None,
+            depth: 2,
+            limit: 25,
+            label_chars: 64,
+            preview_chars: 180,
+            include_invalidated: false,
+            include_edges: true,
+        })
+        .expect("graph projection");
+        assert!(graph.nodes.len() >= 3);
+        assert!(
+            graph
+                .edges
+                .iter()
+                .any(|edge| edge.source == turn.user_memory_id
+                    && edge.target == turn.assistant_memory_id
+                    && matches!(edge.edge_type, BridgeEdgeType::Before))
+        );
+
         let sleep = run_sleep_maintenance(RunSleepMaintenanceRequest {
             handle: opened.handle,
             max_memories: 100,
@@ -767,7 +1106,7 @@ mod tests {
         })
         .expect("run sleep maintenance");
         assert!(sleep.lease_acquired);
-        assert_eq!(sleep.processed_memories, 1);
+        assert_eq!(sleep.processed_memories, 3);
 
         close_database(opened.handle).expect("close database");
     }

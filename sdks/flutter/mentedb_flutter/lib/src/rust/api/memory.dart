@@ -6,15 +6,15 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `append_chunk_line`, `chunk_memory_bank`, `clear_source_memories`, `current_timestamp_micros`, `format_context`, `from_core`, `get_session`, `get`, `insert`, `lease_busy`, `normalize_database_path`, `normalize_source`, `parse_agent_id`, `registry`, `remove`, `split_long_line`, `to_i64_u64`, `to_i64`, `to_u32`, `validate_positive_u32`
+// These functions are ignored because they are not marked as `pub`: `add_conversation_metadata`, `append_chunk_line`, `build_embedded_memory`, `chunk_memory_bank`, `clear_source_memories`, `current_timestamp_micros`, `format_context`, `from_core`, `get_session`, `get`, `insert`, `lease_busy`, `normalize_database_path`, `normalize_message`, `normalize_source`, `parse_agent_id`, `registry`, `remove`, `split_long_line`, `to_i64_u64`, `to_i64`, `to_u32`, `validate_positive_u32`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DbSession`, `SessionRegistry`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`
 // These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 /// Open or create a MenteDB database and return a process-local session handle.
-Future<OpenDatabaseResult> openDatabase(
-        {required OpenDatabaseRequest request}) =>
-    RustLib.instance.api.crateApiMemoryOpenDatabase(request: request);
+Future<OpenDatabaseResult> openDatabase({
+  required OpenDatabaseRequest request,
+}) => RustLib.instance.api.crateApiMemoryOpenDatabase(request: request);
 
 /// Close a MenteDB session and flush persisted state.
 Future<void> closeDatabase({required int handle}) =>
@@ -29,19 +29,178 @@ Future<int> memoryCount({required int handle}) =>
     RustLib.instance.api.crateApiMemoryMemoryCount(handle: handle);
 
 /// Store user text as real MenteDB memory nodes.
-Future<IngestMemoryBankResult> ingestMemoryBank(
-        {required IngestMemoryBankRequest request}) =>
-    RustLib.instance.api.crateApiMemoryIngestMemoryBank(request: request);
+Future<IngestMemoryBankResult> ingestMemoryBank({
+  required IngestMemoryBankRequest request,
+}) => RustLib.instance.api.crateApiMemoryIngestMemoryBank(request: request);
 
 /// Recall a bounded MenteDB context for a chat prompt.
-Future<RecallMemoryContextResult> recallMemoryContext(
-        {required RecallMemoryContextRequest request}) =>
-    RustLib.instance.api.crateApiMemoryRecallMemoryContext(request: request);
+Future<RecallMemoryContextResult> recallMemoryContext({
+  required RecallMemoryContextRequest request,
+}) => RustLib.instance.api.crateApiMemoryRecallMemoryContext(request: request);
+
+/// Store a completed user and assistant exchange as recent episodic memory.
+Future<StoreConversationTurnResult> storeConversationTurn({
+  required StoreConversationTurnRequest request,
+}) =>
+    RustLib.instance.api.crateApiMemoryStoreConversationTurn(request: request);
+
+/// Build a bounded graph projection from the native MenteDB graph.
+Future<BridgeGraphProjection> graphProjection({
+  required GraphProjectionRequest request,
+}) => RustLib.instance.api.crateApiMemoryGraphProjection(request: request);
 
 /// Run MenteDB sleep maintenance under the database lease.
-Future<BridgeSleepMaintenanceResult> runSleepMaintenance(
-        {required RunSleepMaintenanceRequest request}) =>
-    RustLib.instance.api.crateApiMemoryRunSleepMaintenance(request: request);
+Future<BridgeSleepMaintenanceResult> runSleepMaintenance({
+  required RunSleepMaintenanceRequest request,
+}) => RustLib.instance.api.crateApiMemoryRunSleepMaintenance(request: request);
+
+/// Edge type accepted by the Flutter bridge.
+enum BridgeEdgeType {
+  caused,
+  before,
+  related,
+  contradicts,
+  supports,
+  supersedes,
+  derived,
+  partOf,
+}
+
+/// Renderer-neutral graph projection returned through FRB.
+class BridgeGraphProjection {
+  final List<BridgeGraphProjectionNode> nodes;
+  final List<BridgeGraphProjectionEdge> edges;
+  final int availableNodes;
+  final bool truncated;
+
+  const BridgeGraphProjection({
+    required this.nodes,
+    required this.edges,
+    required this.availableNodes,
+    required this.truncated,
+  });
+
+  @override
+  int get hashCode =>
+      nodes.hashCode ^
+      edges.hashCode ^
+      availableNodes.hashCode ^
+      truncated.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BridgeGraphProjection &&
+          runtimeType == other.runtimeType &&
+          nodes == other.nodes &&
+          edges == other.edges &&
+          availableNodes == other.availableNodes &&
+          truncated == other.truncated;
+}
+
+/// Graph edge DTO for Flutter graph renderers.
+class BridgeGraphProjectionEdge {
+  final String source;
+  final String target;
+  final BridgeEdgeType edgeType;
+  final double weight;
+  final String? label;
+  final PlatformInt64 createdAtMicros;
+  final PlatformInt64? validUntilMicros;
+
+  const BridgeGraphProjectionEdge({
+    required this.source,
+    required this.target,
+    required this.edgeType,
+    required this.weight,
+    this.label,
+    required this.createdAtMicros,
+    this.validUntilMicros,
+  });
+
+  @override
+  int get hashCode =>
+      source.hashCode ^
+      target.hashCode ^
+      edgeType.hashCode ^
+      weight.hashCode ^
+      label.hashCode ^
+      createdAtMicros.hashCode ^
+      validUntilMicros.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BridgeGraphProjectionEdge &&
+          runtimeType == other.runtimeType &&
+          source == other.source &&
+          target == other.target &&
+          edgeType == other.edgeType &&
+          weight == other.weight &&
+          label == other.label &&
+          createdAtMicros == other.createdAtMicros &&
+          validUntilMicros == other.validUntilMicros;
+}
+
+/// Memory node DTO for Flutter graph renderers.
+class BridgeGraphProjectionNode {
+  final String id;
+  final String label;
+  final String preview;
+  final BridgeMemoryType memoryType;
+  final double salience;
+  final double confidence;
+  final List<String> tags;
+  final PlatformInt64 createdAtMicros;
+  final PlatformInt64 accessedAtMicros;
+  final PlatformInt64? validUntilMicros;
+  final int embeddingDim;
+
+  const BridgeGraphProjectionNode({
+    required this.id,
+    required this.label,
+    required this.preview,
+    required this.memoryType,
+    required this.salience,
+    required this.confidence,
+    required this.tags,
+    required this.createdAtMicros,
+    required this.accessedAtMicros,
+    this.validUntilMicros,
+    required this.embeddingDim,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      label.hashCode ^
+      preview.hashCode ^
+      memoryType.hashCode ^
+      salience.hashCode ^
+      confidence.hashCode ^
+      tags.hashCode ^
+      createdAtMicros.hashCode ^
+      accessedAtMicros.hashCode ^
+      validUntilMicros.hashCode ^
+      embeddingDim.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BridgeGraphProjectionNode &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          label == other.label &&
+          preview == other.preview &&
+          memoryType == other.memoryType &&
+          salience == other.salience &&
+          confidence == other.confidence &&
+          tags == other.tags &&
+          createdAtMicros == other.createdAtMicros &&
+          accessedAtMicros == other.accessedAtMicros &&
+          validUntilMicros == other.validUntilMicros &&
+          embeddingDim == other.embeddingDim;
+}
 
 /// Memory type accepted by the Flutter bridge.
 enum BridgeMemoryType {
@@ -51,7 +210,6 @@ enum BridgeMemoryType {
   antiPattern,
   reasoning,
   correction,
-  ;
 }
 
 /// A single recalled memory with score and metadata.
@@ -213,6 +371,54 @@ class BridgeSleepMaintenanceResult {
           enrichmentPending == other.enrichmentPending &&
           enrichmentCandidates == other.enrichmentCandidates &&
           issues == other.issues;
+}
+
+/// Request used to project the MenteDB graph for Flutter rendering.
+class GraphProjectionRequest {
+  final int handle;
+  final String? center;
+  final int depth;
+  final int limit;
+  final int labelChars;
+  final int previewChars;
+  final bool includeInvalidated;
+  final bool includeEdges;
+
+  const GraphProjectionRequest({
+    required this.handle,
+    this.center,
+    required this.depth,
+    required this.limit,
+    required this.labelChars,
+    required this.previewChars,
+    required this.includeInvalidated,
+    required this.includeEdges,
+  });
+
+  @override
+  int get hashCode =>
+      handle.hashCode ^
+      center.hashCode ^
+      depth.hashCode ^
+      limit.hashCode ^
+      labelChars.hashCode ^
+      previewChars.hashCode ^
+      includeInvalidated.hashCode ^
+      includeEdges.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GraphProjectionRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          center == other.center &&
+          depth == other.depth &&
+          limit == other.limit &&
+          labelChars == other.labelChars &&
+          previewChars == other.previewChars &&
+          includeInvalidated == other.includeInvalidated &&
+          includeEdges == other.includeEdges;
 }
 
 /// Request used to replace or append a text memory bank.
@@ -512,4 +718,93 @@ class RunSleepMaintenanceRequest {
           consolidationSimilarityThreshold ==
               other.consolidationSimilarityThreshold &&
           linkEntities == other.linkEntities;
+}
+
+/// Request used to persist a completed chat turn as recent episodic memory.
+class StoreConversationTurnRequest {
+  /// Database handle returned by `open_database`.
+  final int handle;
+
+  /// Stable conversation identifier chosen by the app.
+  final String conversationId;
+
+  /// Monotonic turn index within the conversation.
+  final int turnIndex;
+
+  /// User message to persist.
+  final String userMessage;
+
+  /// Assistant message to persist.
+  final String assistantMessage;
+
+  /// Source tag used to retrieve or maintain recent chat separately.
+  final String source;
+
+  /// Flush indexes, graph, and storage after storing the turn.
+  final bool flush;
+
+  const StoreConversationTurnRequest({
+    required this.handle,
+    required this.conversationId,
+    required this.turnIndex,
+    required this.userMessage,
+    required this.assistantMessage,
+    required this.source,
+    required this.flush,
+  });
+
+  @override
+  int get hashCode =>
+      handle.hashCode ^
+      conversationId.hashCode ^
+      turnIndex.hashCode ^
+      userMessage.hashCode ^
+      assistantMessage.hashCode ^
+      source.hashCode ^
+      flush.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StoreConversationTurnRequest &&
+          runtimeType == other.runtimeType &&
+          handle == other.handle &&
+          conversationId == other.conversationId &&
+          turnIndex == other.turnIndex &&
+          userMessage == other.userMessage &&
+          assistantMessage == other.assistantMessage &&
+          source == other.source &&
+          flush == other.flush;
+}
+
+/// Summary returned after storing a completed chat turn.
+class StoreConversationTurnResult {
+  final int stored;
+  final String userMemoryId;
+  final String assistantMemoryId;
+  final int memoryCount;
+
+  const StoreConversationTurnResult({
+    required this.stored,
+    required this.userMemoryId,
+    required this.assistantMemoryId,
+    required this.memoryCount,
+  });
+
+  @override
+  int get hashCode =>
+      stored.hashCode ^
+      userMemoryId.hashCode ^
+      assistantMemoryId.hashCode ^
+      memoryCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StoreConversationTurnResult &&
+          runtimeType == other.runtimeType &&
+          stored == other.stored &&
+          userMemoryId == other.userMemoryId &&
+          assistantMemoryId == other.assistantMemoryId &&
+          memoryCount == other.memoryCount;
 }
