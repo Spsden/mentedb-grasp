@@ -10,6 +10,11 @@ bounded context for the user prompt, then sends two chat completion requests:
 1. No memory context.
 2. Retrieved MenteDB memory context.
 
+When the memory-assisted response succeeds, the demo stores the user message and
+assistant reply back into MenteDB as recent episodic chat memories. The MenteDB
+panel also includes a manual sleep maintenance button and a rotatable graph view
+for inspecting memory nodes and edges.
+
 The default connection is OpenRouter:
 
 - Endpoint: `https://openrouter.ai/api/v1`

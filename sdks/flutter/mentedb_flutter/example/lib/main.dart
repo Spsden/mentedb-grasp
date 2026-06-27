@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:mentedb_flutter/mentedb_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'src/memory_graph_view.dart';
 import 'src/memory_prompt.dart';
 import 'src/openai_compatible_client.dart';
 
@@ -102,7 +103,12 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
   double _temperature = 0.2;
   bool _hideApiKey = true;
   bool _isRunning = false;
+  bool _isMaintaining = false;
+  bool _isLoadingGraph = false;
   bool _runSleepMaintenance = true;
+  late final String _conversationId =
+      'demo-${DateTime.now().microsecondsSinceEpoch}';
+  int _turnIndex = 0;
   Future<MenteDbMemoryStore>? _memoryStoreFuture;
   MenteDbMemoryStore? _memoryStore;
   String? _error;
@@ -111,6 +117,9 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
   IngestMemoryBankResult? _ingestResult;
   RecallMemoryContextResult? _recallResult;
   BridgeSleepMaintenanceResult? _sleepResult;
+  StoreConversationTurnResult? _conversationTurnResult;
+  BridgeGraphProjection? _graphProjection;
+  String? _selectedGraphNodeId;
   ChatCompletionResult? _withoutMemory;
   ChatCompletionResult? _withMemory;
 
@@ -143,6 +152,104 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
     return store;
   }
 
+  Future<BridgeGraphProjection> _loadGraphProjection(
+    MenteDbMemoryStore memoryStore,
+  ) {
+    return memoryStore.graphProjection(
+      depth: 3,
+      limit: 320,
+      labelChars: 72,
+      previewChars: 280,
+      includeInvalidated: false,
+      includeEdges: true,
+    );
+  }
+
+  String? _selectedNodeAfterRefresh(
+    BridgeGraphProjection projection, {
+    String? preferredNodeId,
+  }) {
+    final preferred = preferredNodeId ?? _selectedGraphNodeId;
+    if (preferred != null &&
+        projection.nodes.any((node) => node.id == preferred)) {
+      return preferred;
+    }
+    if (projection.nodes.isEmpty) {
+      return null;
+    }
+    return projection.nodes.first.id;
+  }
+
+  Future<void> _runManualSleepMaintenance() async {
+    setState(() {
+      _isMaintaining = true;
+      _error = null;
+    });
+
+    try {
+      final memoryStore = await _ensureMemoryStore();
+      final sleepResult = await memoryStore.runSleepMaintenance();
+      final count = await memoryStore.memoryCount();
+      final graph = await _loadGraphProjection(memoryStore);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _sleepResult = sleepResult;
+        _memoryCount = count;
+        _graphProjection = graph;
+        _selectedGraphNodeId = _selectedNodeAfterRefresh(graph);
+      });
+    } on Object catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = error.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isMaintaining = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshGraph() async {
+    setState(() {
+      _isLoadingGraph = true;
+      _error = null;
+    });
+
+    try {
+      final memoryStore = await _ensureMemoryStore();
+      final graph = await _loadGraphProjection(memoryStore);
+      final count = await memoryStore.memoryCount();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _graphProjection = graph;
+        _memoryCount = count;
+        _selectedGraphNodeId = _selectedNodeAfterRefresh(graph);
+      });
+    } on Object catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = error.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingGraph = false;
+        });
+      }
+    }
+  }
+
   Future<void> _runComparison() async {
     final endpoint = _endpointController.text.trim();
     final model = _modelController.text.trim();
@@ -168,6 +275,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _ingestResult = null;
       _recallResult = null;
       _sleepResult = null;
+      _conversationTurnResult = null;
       _withoutMemory = null;
       _withMemory = null;
     });
@@ -178,7 +286,6 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       final sleepResult =
           _runSleepMaintenance ? await memoryStore.runSleepMaintenance() : null;
       final recallResult = await memoryStore.recallForPrompt(userPrompt);
-      final count = await memoryStore.memoryCount();
 
       final uri = resolveChatCompletionsUri(endpoint);
       final apiKey = _apiKeyController.text.trim();
@@ -218,15 +325,32 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
         ),
       ]);
 
+      final nextTurnIndex = _turnIndex + 1;
+      final conversationTurnResult = await memoryStore.storeConversationTurn(
+        conversationId: _conversationId,
+        turnIndex: nextTurnIndex,
+        userMessage: userPrompt,
+        assistantMessage: responses[1].content,
+      );
+      final count = await memoryStore.memoryCount();
+      final graph = await _loadGraphProjection(memoryStore);
+
       if (!mounted) {
         return;
       }
       setState(() {
+        _turnIndex = nextTurnIndex;
         _databasePath = memoryStore.databasePath;
         _memoryCount = count;
         _ingestResult = ingestResult;
         _recallResult = recallResult;
         _sleepResult = sleepResult;
+        _conversationTurnResult = conversationTurnResult;
+        _graphProjection = graph;
+        _selectedGraphNodeId = _selectedNodeAfterRefresh(
+          graph,
+          preferredNodeId: conversationTurnResult.assistantMemoryId,
+        );
         _withoutMemory = responses[0];
         _withMemory = responses[1];
       });
@@ -254,6 +378,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _ingestResult = null;
       _recallResult = null;
       _sleepResult = null;
+      _conversationTurnResult = null;
       _withoutMemory = null;
       _withMemory = null;
       _error = null;
@@ -269,6 +394,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _ingestResult = null;
       _recallResult = null;
       _sleepResult = null;
+      _conversationTurnResult = null;
       _withoutMemory = null;
       _withMemory = null;
       _error = null;
@@ -282,6 +408,7 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
       _ingestResult = null;
       _recallResult = null;
       _sleepResult = null;
+      _conversationTurnResult = null;
       _error = null;
     });
   }
@@ -374,6 +501,21 @@ class _MemoryDemoScreenState extends State<MemoryDemoScreen> {
                     ingestResult: _ingestResult,
                     recallResult: _recallResult,
                     sleepResult: _sleepResult,
+                    conversationTurnResult: _conversationTurnResult,
+                    graphProjection: _graphProjection,
+                    selectedGraphNodeId: _selectedGraphNodeId,
+                    isMaintaining: _isMaintaining,
+                    isLoadingGraph: _isLoadingGraph,
+                    onRunSleepMaintenance: _isRunning || _isMaintaining
+                        ? null
+                        : _runManualSleepMaintenance,
+                    onRefreshGraph:
+                        _isRunning || _isLoadingGraph ? null : _refreshGraph,
+                    onGraphNodeSelected: (nodeId) {
+                      setState(() {
+                        _selectedGraphNodeId = nodeId;
+                      });
+                    },
                   ),
                   const SizedBox(height: 16),
                   _ResultGrid(
@@ -645,6 +787,14 @@ class _NativeStatusPanel extends StatelessWidget {
     required this.ingestResult,
     required this.recallResult,
     required this.sleepResult,
+    required this.conversationTurnResult,
+    required this.graphProjection,
+    required this.selectedGraphNodeId,
+    required this.isMaintaining,
+    required this.isLoadingGraph,
+    required this.onRunSleepMaintenance,
+    required this.onRefreshGraph,
+    required this.onGraphNodeSelected,
   });
 
   final String? databasePath;
@@ -652,12 +802,22 @@ class _NativeStatusPanel extends StatelessWidget {
   final IngestMemoryBankResult? ingestResult;
   final RecallMemoryContextResult? recallResult;
   final BridgeSleepMaintenanceResult? sleepResult;
+  final StoreConversationTurnResult? conversationTurnResult;
+  final BridgeGraphProjection? graphProjection;
+  final String? selectedGraphNodeId;
+  final bool isMaintaining;
+  final bool isLoadingGraph;
+  final VoidCallback? onRunSleepMaintenance;
+  final VoidCallback? onRefreshGraph;
+  final ValueChanged<String?> onGraphNodeSelected;
 
   @override
   Widget build(BuildContext context) {
     final recalled = recallResult;
     final ingested = ingestResult;
     final sleep = sleepResult;
+    final storedTurn = conversationTurnResult;
+    final graph = graphProjection;
     final path = databasePath;
 
     return _Panel(
@@ -706,6 +866,43 @@ class _NativeStatusPanel extends StatelessWidget {
                   icon: Icons.auto_awesome_motion,
                   label: 'Enrich ${sleep.enrichmentCandidates}',
                 ),
+              if (storedTurn != null)
+                _MetricChip(
+                  icon: Icons.history,
+                  label: 'Recent chat ${storedTurn.stored}',
+                ),
+              if (graph != null)
+                _MetricChip(
+                  icon: Icons.account_tree_outlined,
+                  label: 'Graph ${graph.nodes.length}/${graph.edges.length}',
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onRunSleepMaintenance,
+                icon: isMaintaining
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.bedtime_outlined),
+                label: Text(isMaintaining ? 'Maintaining' : 'Run sleep'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onRefreshGraph,
+                icon: isLoadingGraph
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh),
+                label: Text(isLoadingGraph ? 'Refreshing' : 'Refresh graph'),
+              ),
             ],
           ),
           if (path != null) ...[
@@ -716,6 +913,13 @@ class _NativeStatusPanel extends StatelessWidget {
             const SizedBox(height: 12),
             SelectableText(recalled.context),
           ],
+          const SizedBox(height: 12),
+          MemoryGraphView(
+            projection: graph,
+            selectedNodeId: selectedGraphNodeId,
+            onNodeSelected: onGraphNodeSelected,
+            isLoading: isLoadingGraph,
+          ),
         ],
       ),
     );

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 const defaultOpenRouterEndpoint = 'https://openrouter.ai/api/v1';
-const defaultOpenRouterModel = '~openai/gpt-latest';
+const defaultOpenRouterModel = 'openrouter/auto';
 const defaultOpenRouterReferer = 'https://mentedb.local';
 const defaultOpenRouterTitle = 'MenteDB Memory Demo';
 
