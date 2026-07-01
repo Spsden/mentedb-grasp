@@ -1,0 +1,134 @@
+{
+  "id": "pratap_synapse_memory_drift",
+  "name": "Pratap Synapse memory drift benchmark",
+  "description": "A multi-turn diagnostic fixture for checking whether MenteDB retrieves user profile, project, OAuth, career, and recent correction context over a chained conversation.",
+  "project_context": "pratap_synapse_benchmark",
+  "settings": {
+    "retrieve_limit": 8,
+    "max_context_chars": 5000
+  },
+  "memory_bank": [
+    {
+      "section": "USER PROFILE AND TECH PREFERENCES",
+      "tags": ["profile", "preferences"],
+      "items": [
+        "Name: Pratap.",
+        "Profession: Senior Full-Stack Engineer and Mobile Architect.",
+        "Core stack: Flutter with Dart, TypeScript, Supabase, and PostgreSQL.",
+        "Legacy migration preference: transitioning backend services away from Java Spring Boot over to Node.js and TypeScript.",
+        "Development OS and tools: macOS, IntelliJ IDEA for mobile work, and VS Code for web work.",
+        "Work style: highly analytical, prefers clean production-ready typed code snippets, strongly dislikes loose any types in TypeScript or untyped dynamic maps in Dart."
+      ]
+    },
+    {
+      "section": "ACTIVE PROJECTS AND INFRASTRUCTURE",
+      "tags": ["projects", "synapse", "infrastructure"],
+      "items": [
+        "Project Synapse is an AI-driven orchestrator built directly into the mobile system Share Sheet.",
+        "Synapse uses on-device machine learning models to parse text and images shared by the user and extract actionable entities.",
+        "Synapse storage uses a local SQLite or Isar cache that syncs up to a Supabase backend.",
+        "Plugin ecosystem work includes re-architecting the plugin_oauth_clients table.",
+        "Plugin OAuth migration task: change the plugin_oauth_clients column package_id from UUID to VARCHAR so third-party client strings can be stored.",
+        "OAuth integrations under active debugging include redirect URI mismatches and missing token endpoints for Notion and Google Workspace OAuth flows in Flutter."
+      ]
+    },
+    {
+      "section": "PERSONAL CONTEXT AND LOCATIONS",
+      "tags": ["personal", "career", "location"],
+      "items": [
+        "Base location: Sydney, Australia, near the North Ryde tech hub corridor.",
+        "Career context: Pratap is actively discussing a contract Senior Frontend and Mobile role with recruitment specialist Neema Mehra at PERSOL."
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "id": "turn_01_database_migration",
+      "phase": "phase_1",
+      "title": "Complex database migration test",
+      "question": "I'm writing the SQL migration file for the plugin_oauth_clients table modifications we talked about earlier. Give me a raw Postgres script to alter the column type safely without dropping the existing foreign key relation or breaking production data.",
+      "what_this_tests": "The system must retrieve the exact table, column, and type change.",
+      "expected_with_memory": "The AI must identify plugin_oauth_clients.package_id and the UUID to VARCHAR change. It should include explicit casting with USING package_id::varchar and warn about dependent constraints.",
+      "expected_without_memory": "The AI should ask which column is being altered, what the table structure is, and what the old and new data types are.",
+      "required_context_terms": ["plugin_oauth_clients", "package_id", "uuid", "varchar"],
+      "expected_answer_terms": ["plugin_oauth_clients", "package_id", "uuid", "varchar"]
+    },
+    {
+      "id": "turn_02_cascading_backend_update",
+      "phase": "phase_1",
+      "title": "Cascading context test",
+      "question": "Awesome. Now write me the matching repository update for that specific project's new backend architecture. Just the entity definition and the fetch function.",
+      "what_this_tests": "The system must carry the Turn 1 migration context and combine it with the stored backend migration preference.",
+      "expected_with_memory": "The response should target TypeScript and Node.js, not Java Spring Boot. The entity should model packageId as a string and use Supabase or strongly typed TypeScript data access.",
+      "expected_without_memory": "The AI should ask what backend language or framework is being used.",
+      "required_context_terms": ["typescript", "node.js", "package_id", "varchar", "supabase"],
+      "expected_answer_terms": ["typescript", "packageId", "string"]
+    },
+    {
+      "id": "turn_03_professional_context",
+      "phase": "phase_1",
+      "title": "Cross-domain technical and professional test",
+      "question": "I have a follow-up sync with Neema from PERSOL in an hour about that North Ryde contract role. Write me a quick, sharp email update to send her right after the call to confirm my technical alignment with their stack.",
+      "what_this_tests": "The system must bridge career context with technical profile.",
+      "expected_with_memory": "The email should mention Neema, PERSOL, the North Ryde contract role, TypeScript, full-stack architecture, and mobile or frontend ecosystems.",
+      "expected_without_memory": "The AI should ask for the recruiter's name, role, location, and stack requirements.",
+      "required_context_terms": ["neema", "persol", "north ryde", "typescript", "mobile"],
+      "expected_answer_terms": ["neema", "persol", "north ryde", "typescript"]
+    },
+    {
+      "id": "turn_04_oauth_redirect",
+      "phase": "phase_1",
+      "title": "Edge-case safety test",
+      "question": "I'm testing the redirect flow right now on my local machine and keep getting a 'missing_redirect_uri' error page from the provider. How do I fix this in my app configuration?",
+      "what_this_tests": "The system must connect an implicit OAuth bug to the active Flutter OAuth integration work.",
+      "expected_with_memory": "The response should infer Notion or Google Workspace OAuth in a Flutter app, then cover redirect URI whitelisting, Flutter deep links, Android intent filters, and iOS URL schemes or associated domains.",
+      "expected_without_memory": "The AI should ask which OAuth provider and client framework are being used.",
+      "required_context_terms": ["notion", "google workspace", "flutter", "redirect uri"],
+      "expected_answer_terms": ["flutter", "redirect", "notion", "google"]
+    },
+    {
+      "id": "turn_05_synapse_performance",
+      "phase": "phase_2",
+      "title": "Thread block and performance test",
+      "question": "I'm hitting a performance bottleneck in Synapse. When the local machine learning model processes a massive share sheet text payload, it heavily drops frames on the UI thread. How should I offload this work without freezing the interface?",
+      "what_this_tests": "The system must remember Synapse is a Flutter mobile app and avoid native iOS or backend threading drift.",
+      "expected_with_memory": "The response should focus on Dart isolates, Isolate.run or compute, background isolates, serialization across isolate boundaries, and keeping the Flutter UI thread free.",
+      "expected_without_memory": "The AI may drift into native iOS, Android, backend workers, or generic threading advice.",
+      "required_context_terms": ["synapse", "flutter", "share sheet", "on-device machine learning", "dart"],
+      "expected_answer_terms": ["flutter", "dart", "isolate"]
+    },
+    {
+      "id": "turn_06_distributed_system_pivot",
+      "phase": "phase_2",
+      "title": "Immediate constraint conflict test",
+      "question": "Change of plans for the North Ryde technical assessment. Neema just called back and said their engineering lead wants to evaluate my system design skills on a distributed system instead. Let's design a high-throughput webhook receiver that ingestion-throttles incoming events before hitting PostgreSQL. What's our layout?",
+      "what_this_tests": "The system must pivot from mobile/frontend context to backend and system architecture while retaining career context.",
+      "expected_with_memory": "The response should remember Neema, North Ryde, PERSOL, PostgreSQL, and Pratap's backend capability, then propose a buffered ingestion layout with queueing and controlled database writes.",
+      "expected_without_memory": "The AI may ask who Neema is, what role is being assessed, or which database is being used.",
+      "required_context_terms": ["neema", "north ryde", "persol", "postgresql", "typescript"],
+      "expected_answer_terms": ["postgresql", "queue", "throttle"]
+    },
+    {
+      "id": "turn_07_oauth_scope_correction",
+      "phase": "phase_2",
+      "title": "Direct memory purge and correction test",
+      "question": "Actually, I decided to pull the plug on the Notion integration completely. It's too restrictive for what Synapse needs. Let's scrub it from our roadmap and only focus on deep Google Workspace integration. What does our OAuth redirect scheme look like now?",
+      "what_this_tests": "The system must handle a destructive correction and update the active OAuth scope.",
+      "expected_with_memory": "The response should drop Notion from the active plan, focus on Google Workspace OAuth, and tailor the redirect scheme for Flutter deep links and Google developer console redirect URI rules.",
+      "expected_without_memory": "The AI may continue discussing Notion or ask what app and OAuth providers are involved.",
+      "required_context_terms": ["notion", "google workspace", "synapse", "flutter"],
+      "expected_answer_terms": ["google", "workspace", "flutter", "redirect"]
+    },
+    {
+      "id": "turn_08_identity_probe",
+      "phase": "phase_2",
+      "title": "Identity and long-range recall probe",
+      "question": "who is pratap",
+      "what_this_tests": "The system must still recall the stable user profile after the multi-domain chain.",
+      "expected_with_memory": "The response should identify Pratap as a Senior Full-Stack Engineer and Mobile Architect in Sydney, working with Flutter, Dart, TypeScript, Supabase, PostgreSQL, and Synapse.",
+      "expected_without_memory": "The AI should say it does not know who Pratap is from the current prompt.",
+      "required_context_terms": ["pratap", "senior full-stack engineer", "mobile architect", "sydney", "flutter"],
+      "expected_answer_terms": ["pratap", "senior", "flutter", "sydney"]
+    }
+  ]
+}

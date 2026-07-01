@@ -73,6 +73,30 @@ savings, sub-millisecond search times.
 
 **No LLM required.** Pure engine test.
 
+### Pratap Synapse Memory Drift Test (`pratap_memory_drift.py`)
+
+Focused diagnostic for the Flutter memory-loss case. The benchmark seeds an
+editable JSON memory bank, runs the chained Synapse/OAuth/career questions, and
+reports whether the required facts appeared in MenteDB context before each
+answer.
+
+```bash
+# Retrieval-only diagnostic, no network or LLM required
+python benchmarks/pratap_memory_drift.py --keep-db
+
+# Optional OpenRouter/OpenAI-compatible answer comparison
+OPENROUTER_API_KEY=... python benchmarks/pratap_memory_drift.py \
+  --llm-endpoint https://openrouter.ai/api/v1 \
+  --model openai/gpt-4o-mini \
+  --compare-without-memory \
+  --keep-db
+```
+
+Edit the fixture at `benchmarks/fixtures/pratap_synapse_memory.json` to add more
+memory-bank entries or turns. The default `mimic-flutter` turn mode intentionally
+calls `process_turn` before and after the answer, matching the current Flutter
+demo flow.
+
 ### Attention Budget Test (`attention_budget.py`)
 
 Proves that memory ordering affects LLM compliance. Hides a critical instruction
